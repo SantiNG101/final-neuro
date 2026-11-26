@@ -1,0 +1,96 @@
+{
+ "Corredor | CR vs CU":{
+  "n_cr":100,
+  "n_cu":75,
+  "rsc_cr":0.016924163,
+  "rsc_cu":0.0144067097,
+  "delta":0.0025174533,
+  "p":0.7502497502,
+  "delta_aj":0.0026194766,
+  "p_aj":0.7432567433,
+  "tasa_cr":5.7510606061,
+  "tasa_cu":5.7442424242,
+  "mde":0.0158253859
+ },
+ "Aproximación | CR vs CU":{
+  "n_cr":100,
+  "n_cu":75,
+  "rsc_cr":0.0187064055,
+  "rsc_cu":0.020883033,
+  "delta":-0.0021766275,
+  "p":0.7762237762,
+  "delta_aj":-0.0012793298,
+  "p_aj":0.8741258741,
+  "tasa_cr":6.5534090909,
+  "tasa_cu":5.9675757576,
+  "mde":0.0153022745
+ },
+ "Olor | OR: CR vs CU":{
+  "n_cr":63,
+  "n_cu":30,
+  "rsc_cr":0.0194101861,
+  "rsc_cu":0.0081722134,
+  "delta":0.0112379727,
+  "p":0.4595404595,
+  "delta_aj":0.0109243448,
+  "p_aj":0.4845154845,
+  "tasa_cr":6.7799422799,
+  "tasa_cu":7.0984848485,
+  "mde":0.0258888716
+ },
+ "Olor | OU: CR vs CU":{
+  "n_cr":24,
+  "n_cu":33,
+  "rsc_cr":0.004501772,
+  "rsc_cu":-0.0012841526,
+  "delta":0.0057859245,
+  "p":0.4875124875,
+  "delta_aj":0.0062175325,
+  "p_aj":0.4515484515,
+  "tasa_cr":6.5890151515,
+  "tasa_cu":6.8539944904,
+  "mde":0.0162010651
+ },
+ "mantel_rho":0.1308845443,
+ "mantel_p":0.000999001,
+ "frac_interaccion_por_cuartil":[
+  0.1623931624,
+  0.1153846154,
+  0.1153846154,
+  0.2051282051
+ ],
+ "p_chi_interaccion":0.0163259272,
+ "composicion_por_cuartil":{
+  "Q1 distintas":{
+   "dirigida":12,
+   "sincronía":10,
+   "inhibitoria":16
+  },
+  "Q2":{
+   "dirigida":15,
+   "sincronía":7,
+   "inhibitoria":5
+  },
+  "Q3":{
+   "dirigida":14,
+   "sincronía":8,
+   "inhibitoria":5
+  },
+  "Q4 parecidas":{
+   "dirigida":21,
+   "sincronía":14,
+   "inhibitoria":13
+  }
+ },
+ "delta_vs_semejanza":{
+  "Aproximación | CR vs CU":{
+   "rho":0.0831160448,
+   "p":0.014985015
+  },
+  "Olor | OR: CR vs CU":{
+   "rho":-0.0696709363,
+   "p":0.031968032
+  }
+ },
+ "n_pares":936
+}
