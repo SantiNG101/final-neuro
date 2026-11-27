@@ -13,7 +13,7 @@
 # | I | Perfiles de respuesta: raster + PSTH por neurona, 4 alineaciones; clasificación de respuestas |
 # | II | Actividad poblacional por tipo de ensayo |
 # | III | Correlación neuronal: autocorrelogramas y cross-correlogramas |
-# | IV | Análisis libre: ¿el contexto recompensado cambia la coordinación? (IV.1–IV.3 hechos; IV.4–IV.6 en el handoff) |
+# | IV | Análisis libre: ¿el contexto recompensado cambia la coordinación? (IV.1–IV.4 hechos; IV.5–IV.6 en el handoff) |
 #
 # **Convención de colores** (la de la consigna): OR·CR rojo, OR·CU naranja, OU·CR negro, OU·CU gris.
 # Los ensayos sin olor (sólo contexto) van en azul (CR) y celeste (CU).
@@ -1024,7 +1024,7 @@ pd.Series(resumen, dtype=object)
 # La ventana de olor termina a los 0,5 s porque en el contexto no recompensado el ratón sale ~0,5 s después de inhalar:
 # así las dos condiciones se comparan dentro del contexto.
 #
-# **Plan completo** (esta entrega cubre IV.1 a IV.3; el resto está en `HANDOFF_parte_IV.md`):
+# **Plan completo** (esta entrega cubre IV.1 a IV.4; el resto está en `HANDOFF_parte_IV.md`):
 # IV.1 r_sc por contexto y época con controles · IV.2 ensambles: semejanza de respuesta vs acoplamiento ·
 # IV.3 CCG de ms por contexto · IV.4 ¿la coordinación ayuda o perjudica a decodificar el olor? ·
 # IV.5 ensambles por clustering · IV.6 control de la velocidad y cierre.
@@ -1531,11 +1531,12 @@ for vn, (a, b) in VENT4.items():
         RES44[(vn, cn)] = dict(n_or=int(y.sum()), n_ou=int((1 - y).sum()), real=float(real.mean()),
                                real_folds=real, mezcla=mezc, azar=azar,
                                p_vs_azar=float((np.sum(azar >= real.mean()) + 1) / (len(azar) + 1)),
-                               p_vs_mezcla=float(2 * min(np.mean(mezc >= real.mean()), np.mean(mezc <= real.mean())) + 1 / 101))
+                               p_vs_mezcla=float((np.sum(np.abs(mezc - mezc.mean()) >= abs(real.mean() - mezc.mean())) + 1)
+                                                 / (len(mezc) + 1)))
         o = RES44[(vn, cn)]
         print(f"{vn:8s} {cn}: OR/OU = {o['n_or']}/{o['n_ou']}  real = {o['real']:.3f} (folds {np.round(real, 2)})  "
               f"mezclado = {mezc.mean():.3f} ± {mezc.std():.3f}  azar = {azar.mean():.3f} (95 % {np.quantile(azar, 0.95):.3f})  "
-              f"p vs azar = {o['p_vs_azar']:.3f}  p vs mezclado = {min(o['p_vs_mezcla'], 1):.3f}")
+              f"p vs azar = {o['p_vs_azar']:.3f}  p vs mezclado = {o['p_vs_mezcla']:.3f}")
 
 # comparación entre contextos con los mismos tamaños (30 OR + 24 OU), ventana principal
 N_OR, N_OU = 30, 24
@@ -1573,11 +1574,11 @@ for ax, vn in zip(axs[:2], VENT4):
             body.set_facecolor(col); body.set_alpha(1); body.set_edgecolor("none")
         ax.errorbar(x0, o["real"], yerr=o["real_folds"].std(ddof=1) / np.sqrt(len(o["real_folds"])), fmt="o",
                     color=VERDE_CR if cn == "CR" else GRIS_CU, ms=8, capsize=3, zorder=3)
-        ax.text(x0, 0.97, f"{cn}\n{o['n_or']} OR / {o['n_ou']} OU", ha="center", va="top", fontsize=7.5)
+        ax.text(x0, 0.32, f"{cn}\n{o['n_or']} OR / {o['n_ou']} OU", ha="center", va="bottom", fontsize=7.5)
     ax.axhline(0.5, color=TINTA, lw=0.5, ls=":")
     ax.set_xticks([-0.3, 0, 0.3, 0.9, 1.2, 1.5])
     ax.set_xticklabels(["azar", "real", "mezcl.", "azar", "real", "mezcl."], fontsize=7.5)
-    ax.set_ylim(0.3, 1.0)
+    ax.set_ylim(0.3, 1.03)
     ax.set_title(f"Olor OR vs OU · {vn}", fontsize=9)
 axs[0].set_ylabel("Balanced accuracy (CV por bloques)")
 ax = axs[2]
@@ -1596,7 +1597,7 @@ RES44_json = {f"{vn} | {cn}": dict(n_or=o["n_or"], n_ou=o["n_ou"], real=o["real"
                                    real_sd_folds=float(o["real_folds"].std(ddof=1)),
                                    mezcla=float(o["mezcla"].mean()), mezcla_sd=float(o["mezcla"].std()),
                                    azar=float(o["azar"].mean()), azar_q95=float(np.quantile(o["azar"], 0.95)),
-                                   p_vs_azar=o["p_vs_azar"], p_vs_mezcla=float(min(o["p_vs_mezcla"], 1)))
+                                   p_vs_azar=o["p_vs_azar"], p_vs_mezcla=o["p_vs_mezcla"])
               for (vn, cn), o in RES44.items()}
 RES44_json["igualados"] = dict(n_or=N_OR, n_ou=N_OU,
                                **{f"{cn}_{k}": float(DIF_CTX[cn][:, i].mean()) for cn in CTX4 for i, k in enumerate(["real", "mezcla"])},
@@ -1605,9 +1606,34 @@ RES44_json["igualados"] = dict(n_or=N_OR, n_ou=N_OU,
                                dif_CR_menos_CU_ic95=[float(x) for x in np.quantile(dd, [0.025, 0.975])])
 
 # %% [markdown]
+# **Cómo leerlo.** En cada panel: gris = azar (etiquetas permutadas), punto = decodificador con los datos reales
+# (± error estándar entre folds), celeste = datos mezclados (sin correlaciones entre neuronas).
+#
+# - **El olor se decodifica bien en los dos contextos**: ~0,78–0,79 de balanced accuracy en 0–0,5 s, muy por encima del
+#   azar (p < 0,01), aunque en el promedio poblacional de la Parte II casi no se veía. La información está distribuida
+#   en el patrón de la población, no en la actividad media.
+# - **Destruir las correlaciones no cambia nada**: real ≈ mezclado en todos los casos. Con estos tamaños, las
+#   correlaciones entre neuronas **ni ayudan ni perjudican** de forma detectable a la lectura lineal del olor. Es
+#   coherente con que los r_sc sean tan chicos (~0,01–0,02, IV.1): con 44 neuronas no alcanzan para limitar la información.
+# - **Entre contextos** (panel derecho, igualando ensayos): el efecto de las correlaciones es ~0 en ambos y la diferencia
+#   CR − CU tiene un intervalo muy ancho (de −0,12 a +0,16): no podemos afirmar ni descartar diferencias moderadas.
+#
+# **Cuidado con dos confusores de comportamiento** (no tenemos los lengüeteos ni la velocidad, sólo el tiempo en el contexto):
+# - **En CR, el olor cambia la conducta**: con OU el ratón se queda ~10 s en el contexto, con OR ~2 s. Parte de lo que
+#   distingue OR de OU en CR podría ser movimiento (frenar). Pero en CU, donde la velocidad es igual para los dos olores
+#   (~0,5 s hasta salir en ambos), el olor se decodifica igual de bien: la información sobre el olor no se explica por
+#   la velocidad.
+# - **Ventana 0–1 s en CU (0,99)**: en CU el ratón sale ~0,5 s después de inhalar, así que esa ventana incluye la salida y
+#   el comienzo de la ventana de respuesta, donde OR·CU (olor asociado a recompensa) y OU·CU pueden llevar a conductas
+#   distintas (lamer o no). Por eso la ventana principal es 0–0,5 s; el 0,99 no debe leerse como "codificación de olor".
+#
+# **Conclusión de IV.4.** La corteza piriforme lleva información del olor (recompensado o no) en ambos contextos, y esa
+# información no depende de la coordinación entre neuronas: tratarlas como independientes da la misma lectura.
+
+# %% [markdown]
 # ### Resumen de la Parte IV (IV.1–IV.4) y lo que sigue
 #
-# Los números se guardan en `figuras/resumen_parte4.json` (los usa la presentación). Lo que falta (IV.4–IV.6) está
+# Los números se guardan en `figuras/resumen_parte4.json` (los usa la presentación). Lo que falta (IV.5–IV.6) está
 # detallado en `HANDOFF_parte_IV.md`, con las variables de este notebook que conviene reutilizar.
 
 # %%
@@ -1623,6 +1649,7 @@ res4["composicion_por_cuartil"] = {q: {k: int(v) for k, v in fila.items()} for q
 res4["delta_vs_semejanza"] = {f"{k[0]} | {k[1]}": dict(rho=float(v["rho"]), p=float(v["p"])) for k, v in DELTA_Q.items()}
 res4["n_pares"] = int(len(pares_ok))
 res4["ccg_contexto"] = RES43
+res4["decodificacion"] = RES44_json
 res4["decodificacion"] = RES44_json
 (FIG / "resumen_parte4.json").write_text(pd.Series(res4, dtype=object).to_json(force_ascii=False, indent=1), encoding="utf-8")
 pd.Series(res4, dtype=object)

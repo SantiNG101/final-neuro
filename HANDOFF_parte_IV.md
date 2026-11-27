@@ -30,6 +30,7 @@ Comparaciones: CR (tipos 1, 3, 5) vs CU (2, 4, 6) en corredor y aproximación; O
 | **IV.2** semejanza de respuesta vs acoplamiento | **Like-to-like**: Mantel ρ = 0,13, p = 0,001. Interacciones de ms más frecuentes en los extremos: entre neuronas parecidas dominan dirigidas y sincronía; entre muy distintas, inhibitorias (16 de 38) | `figuras/parte4/ensambles_semejanza.png` |
 | **IV.2** ¿dónde actúa el contexto? | Efecto chico y de **signo opuesto** según la época (aproximación ρ = +0,08, p = 0,015; olor ρ = −0,07, p = 0,03). **Control corredor: ρ = 0,04, p = 0,23** (pasa, pero el patrón por cuartil de la aproximación se parece al del corredor; el Δ grande en Q1 del olor es lo único distinto del control) | mismo panel derecho |
 | **IV.3** interacciones de ms por contexto (140 pares, CCG por ensayo sumado, 1000 permutaciones) | **Estables**: fuerza mediana 0,29 (CR) vs 0,27 (CU), Δ = −0,002, p = 0,95; igual con pares bien medidos, CR submuestreado y por tipo de interacción. Δ detectable ≈ 0,05 | `figuras/parte4/ccg_por_contexto.png` |
+| **IV.4** decodificar OR vs OU (0–0,5 s, logística, GroupKFold por bloques de 20 ensayos) | Olor decodificable en ambos contextos (balanced acc. CR 0,79, CU 0,78; azar 0,50, p < 0,01). **Mezclar (sin correlaciones) no cambia nada** (0,80 / 0,77; p = 0,85 / 0,93). Igualando ensayos, efecto CR − CU = +0,02 (IC −0,12 a +0,16). Confusores: en CR, OU frena al ratón (~10 s vs 2 s); 0–1 s en CU (0,99) incluye la salida/ventana de respuesta | `figuras/parte4/decodificacion.png` |
 
 Todos los números están en `figuras/resumen_parte4.json`, que la presentación lee automáticamente.
 
@@ -157,7 +158,7 @@ texto con alto negativo (el helper `tarjeta` ya lo evita) y renombrar las partes
 ## 7. Checklist
 
 - [x] IV.3 CCG por contexto + figura + números en `res4` (nulo: Δ fuerza mediana −0,002, p = 0,95; `res4["ccg_contexto"]`)
-- [ ] IV.4 decodificación real vs mezclada + figura + números en `res4`
+- [x] IV.4 decodificación real vs mezclada + figura + números en `res4` (`res4["decodificacion"]`; mezcla hecha dentro de cada fold)
 - [ ] IV.5 ensambles por clustering + figura
 - [ ] IV.6 control de velocidad + conclusiones en el notebook
 - [ ] Notebook regenerado y ejecutado sin errores
