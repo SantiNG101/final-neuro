@@ -18,23 +18,25 @@ Se regenera con `presentacion/construir_presentacion.py`.
 | 9 | A escala lenta manda el estímulo, pero no del todo | 1:15 | 10:15 |
 | 10 | Parte IV · ¿El contexto cambia la coordinación? | 1:30 | 11:45 |
 | 11 | El contexto cambia cuánto disparan, no cuánto co-varían | 1:45 | 13:30 |
-| 12 | Ni el número de ensayos ni la tasa esconden un efecto | 1:15 | 14:45 |
-| 13 | Se coordinan más las neuronas que responden parecido | 2:00 | 16:45 |
-| 14 | Lo que sigue: milisegundos por contexto y decodificación | 3:00 | 19:45 |
-| 15 | Conclusiones | 1:30 | 21:15 |
-| 16 | GRACIAS | 0:10 | 21:25 |
+| 12 | Ni el número de ensayos ni la tasa esconden un efecto | 1:30 | 15:00 |
+| 13 | Se coordinan más las neuronas que responden parecido | 2:00 | 17:00 |
+| 14 | La sincronía de milisegundos tampoco cambia | 1:30 | 18:30 |
+| 15 | El olor se lee igual con o sin correlaciones | 1:45 | 20:15 |
+| 16 | Tres ensambles blandos: olor, contexto y un grupo inhibido | 1:30 | 21:45 |
+| 17 | Conclusiones | 1:30 | 23:15 |
+| 18 | GRACIAS | 0:10 | 23:25 |
 
-La Parte I (exploración neurona por neurona) está sólo en el notebook. Parte II ~1 min, Parte III ~6 min, Parte IV ~10 min (3 de ellos reservados para IV.3–IV.4), con margen para preguntas.
+La Parte I (exploración neurona por neurona) está sólo en el notebook. Parte II ~1 min, Parte III ~6 min, Parte IV ~12 min, con margen para preguntas.
 
 ## Texto por diapositiva
 
 ### 1 · ¿Qué sabe la corteza olfativa además del olor?
 
-(20 s) Buenos días. Somos [nombres]. Vamos a presentar el análisis de registros de neuronas de la corteza piriforme, la corteza olfativa primaria, de un ratón que aprendió a asociar olores y contextos con una recompensa. La pregunta de fondo es qué información, además del olor, lleva esta corteza.
+(20 s) Buenos días. Somos Santiago Nartallo Galvagno y Josefina Miguez. Vamos a presentar el análisis de registros de neuronas de la corteza piriforme, la corteza olfativa primaria, de un ratón que aprendió a asociar olores y contextos con una recompensa. La pregunta de fondo es qué información, además del olor, lleva esta corteza.
 
 ### 2 · Más que un detector de olores
 
-(40 s) La idea central [señalar el recuadro celeste]: en un ratón entrenado, la corteza piriforme no sólo detecta olores; su actividad cambia según el contexto en el que espera la recompensa. Pero ese cambio está en cuánto disparan las neuronas, no en cuánto co-varían, y la coordinación entre neuronas se organiza según qué responde cada una. Vamos en tres partes: un repaso breve de la tarea y de la población; la correlación neuronal, que es el análisis que elegimos; y nuestra pregunta propia. La exploración neurona por neurona está completa en el notebook.
+(40 s) La idea central [señalar el recuadro celeste]: en un ratón entrenado, la corteza piriforme no sólo detecta olores; su actividad cambia según el contexto en el que espera la recompensa. Pero ese cambio está en cuánto disparan las neuronas, no en cómo se coordinan: ni la co-variación entre ensayos, ni la sincronía de milisegundos, ni el papel de las correlaciones para leer el olor cambian con el contexto. Vamos en tres partes: un repaso breve de la tarea y de la población; la correlación neuronal, que es el análisis que elegimos; y nuestra pregunta propia. La exploración neurona por neurona está completa en el notebook.
 
 ### 3 · El mismo olor sólo vale en un contexto
 
@@ -74,21 +76,29 @@ La Parte I (exploración neurona por neurona) está sólo en el notebook. Parte 
 
 ### 12 · Ni el número de ensayos ni la tasa esconden un efecto
 
-(75 s) Dos controles [señalar la fila de arriba]: cada histograma es lo que da la diferencia entre contextos si mezclamos al azar las etiquetas de contexto entre ensayos; la línea verde es lo observado, y cae siempre en el centro. Este test ya tiene en cuenta que hay el doble de ensayos recompensados. Abajo, el control por tasa: la correlación de ruido sube con la tasa de disparo, así que si un contexto disparara más podría parecer más correlacionado sólo por eso. Separamos los pares por cuartil de tasa y además ajustamos por tasa con una regresión: el efecto del contexto sigue sin aparecer.
+(90 s) Dos controles [señalar la fila de arriba]: cada histograma es lo que da la diferencia entre contextos si mezclamos al azar las etiquetas de contexto entre ensayos; la línea verde es lo observado, y cae siempre en el centro. Este test ya tiene en cuenta que hay el doble de ensayos recompensados. Abajo, el control por tasa: la correlación de ruido sube con la tasa de disparo, así que si un contexto disparara más podría parecer más correlacionado sólo por eso. Separamos los pares por cuartil de tasa y además ajustamos por tasa con una regresión: el efecto del contexto sigue sin aparecer. Un tercer control [señalar la última línea]: la velocidad. El ratón corre muy distinto según el ensayo, y la locomoción puede mover a muchas neuronas juntas. Quitamos, dentro de cada tipo de ensayo, la parte de la actividad que explica el tiempo en el contexto, y el resultado no cambia; de hecho, sólo tres o cuatro de las 44 neuronas dependen de la velocidad.
 
 ### 13 · Se coordinan más las neuronas que responden parecido
 
-(120 s) El sub-análisis de ensambles. Para cada par medimos cuánto se parecen sus respuestas, la correlación entre sus PSTH en los cuatro tipos de ensayo, y lo comparamos con cuánto co-varían [señalar el primer panel]. Hay una relación clara: los pares que responden parecido tienen más correlación de ruido. Como cada neurona participa en muchos pares, lo testeamos con un test de Mantel, que permuta las etiquetas de las neuronas: rho 0,13, p menor a 0,001. Es la firma de ensambles: grupos de neuronas con la misma respuesta que además disparan juntas. El panel del medio agrega algo que no esperábamos: las interacciones de milisegundos son más frecuentes en los dos extremos, pero de distinto tipo. Entre neuronas muy parecidas dominan las dirigidas y la sincronía; entre neuronas muy distintas, las inhibitorias, 16 de 38. Eso es compatible con ensambles que se excitan por dentro y compiten entre sí. Por último [señalar el tercer panel], miramos si el contexto cambia la coordinación sólo en algunos pares: aparece un efecto chico, pero con signo opuesto en la aproximación y en el olor, así que no lo interpretamos hasta tener el análisis de milisegundos por contexto.
+(120 s) El sub-análisis de ensambles. Para cada par medimos cuánto se parecen sus respuestas, la correlación entre sus PSTH en los cuatro tipos de ensayo, y lo comparamos con cuánto co-varían [señalar el primer panel]. Hay una relación clara: los pares que responden parecido tienen más correlación de ruido. Como cada neurona participa en muchos pares, lo testeamos con un test de Mantel, que permuta las etiquetas de las neuronas: rho 0,13, p menor a 0,001. Es la firma de ensambles: grupos de neuronas con la misma respuesta que además disparan juntas. El panel del medio agrega algo que no esperábamos: las interacciones de milisegundos son más frecuentes en los dos extremos, pero de distinto tipo. Entre neuronas muy parecidas dominan las dirigidas y la sincronía; entre neuronas muy distintas, las inhibitorias, 16 de 38. Eso sugería ensambles que compiten entre sí; más adelante lo testeamos con clustering y no se sostiene. Por último [señalar el tercer panel], miramos si el contexto cambia la coordinación sólo en algunos pares: aparece un efecto chico, con signo opuesto en la aproximación y en el olor. Las barras grises son el corredor, el control: su patrón se parece al de la aproximación, así que no lo tomamos como un resultado firme.
 
-### 14 · Lo que sigue: milisegundos por contexto y decodificación
+### 14 · La sincronía de milisegundos tampoco cambia
 
-(3 min reservados) [PENDIENTE: reemplazar por las diapositivas de resultados de IV.3 y IV.4 cuando estén. Ver HANDOFF_parte_IV.md.] Lo que nos falta responder: si el contexto cambia las interacciones de milisegundos, aunque no cambie la co-variación entre ensayos; y si esa coordinación ayuda o perjudica a decodificar el olor, comparando un decodificador con datos reales contra uno donde mezclamos los ensayos entre neuronas.
+(90 s) r_sc mide co-variación lenta, en cientos de milisegundos. Que no cambie no descarta que cambie la sincronía fina, las interacciones de 1 a 4 milisegundos de la parte tres. Tomamos los 140 pares con interacción y calculamos su correlograma sólo con la parte del ensayo donde el contexto ya se ve, desde un segundo antes de entrar hasta medio segundo después del olor, por separado en cada contexto. La medida es la fuerza de la interacción: cuánto supera el pico a la línea de base, en proporción, así que no depende de la tasa. [Señalar la izquierda] Cada punto es un par: están repartidos a ambos lados de la diagonal. [Señalar el centro] Permutando el contexto entre ensayos, el valor observado cae en el medio: p 0,95. [Señalar la derecha] En el par de ejemplo, el pico está en los dos contextos con la misma altura. Las conexiones funcionales parecen una propiedad fija del circuito.
 
-### 15 · Conclusiones
+### 15 · El olor se lee igual con o sin correlaciones
 
-(90 s) Para cerrar: el ratón aprendió la tarea y la corteza piriforme anticipa el contexto recompensado en su tasa de disparo; muchas neuronas siguen el ritmo respiratorio y forman una red con interacciones de milisegundos. Nuestra pregunta: el contexto cambia cuánto disparan pero no cuánto co-varían, y la coordinación se organiza según qué responde cada neurona, como ensambles. [Completar con IV.3 y IV.4.] Limitaciones: una sola sesión, sin conducta fina, potencia limitada para efectos chicos, y correlación no es conexión.
+(105 s) Aunque el promedio de r_sc no cambie, su estructura podría importar para el código. Entrenamos un decodificador, una regresión logística, para distinguir el olor recompensado del no recompensado con los conteos de las 44 neuronas en el primer medio segundo. Validamos por bloques de ensayos contiguos, porque ensayos vecinos se parecen y partir al azar infla el resultado. [Señalar los puntos] El olor se decodifica bien en los dos contextos, 0,79 y 0,78, contra 0,5 de azar, aunque en el promedio de la población casi no se veía: la información está en el patrón. [Señalar lo celeste] Después mezclamos, dentro de cada olor, los ensayos de cada neurona por separado: cada neurona conserva su respuesta, pero se pierde la co-variación. El decodificador da lo mismo. Con correlaciones tan chicas, no alcanzan para ayudar ni perjudicar. Un cuidado: en el contexto recompensado el olor no recompensado hace frenar al ratón, pero en el no recompensado la velocidad es igual con los dos olores y el olor se decodifica igual de bien. Y la ventana de un segundo en CU da casi 1, pero incluye la salida del contexto: no la leemos como olor.
 
-### 16 · GRACIAS
+### 16 · Tres ensambles blandos: olor, contexto y un grupo inhibido
+
+(90 s) Para cerrar el sub-análisis, agrupamos las neuronas por la semejanza de sus respuestas con clustering jerárquico. El mejor número es 3, y los grupos son más nítidos que con datos sin estructura, aunque no mucho: son ensambles blandos, más un continuo con tres polos. [Señalar los paneles] Uno es de olor, 6 neuronas que se excitan al inhalar, antes con el olor recompensado. Otro, de 12 neuronas, separa los contextos antes de que llegue el olor: es la anticipación que vimos en la población, concentrada en un grupo. El tercero, el más grande, tiene casi todas las inhibidas. Y la idea de ensambles que compiten no se sostiene [señalar la tarjeta de la derecha]: las interacciones inhibitorias no son más frecuentes entre ensambles, si algo, al revés. El contexto queda escrito en la tasa de un ensamble, no en la coordinación.
+
+### 17 · Conclusiones
+
+(90 s) Para cerrar: el ratón aprendió la tarea y la corteza piriforme anticipa el contexto recompensado en su tasa de disparo; muchas neuronas siguen el ritmo respiratorio y forman una red con interacciones de milisegundos. Nuestra pregunta: el contexto cambia cuánto disparan, pero no cómo se coordinan; ni la co-variación entre ensayos, ni la sincronía de milisegundos, y quitar las correlaciones no cambia cómo se lee el olor. La coordinación sí se organiza según qué responde cada neurona, en ensambles blandos, y uno de ellos lleva el contexto en su tasa. Limitaciones: una sola sesión, sin conducta fina, potencia limitada para efectos chicos, y correlación no es conexión.
+
+### 18 · GRACIAS
 
 (10 s) Gracias. Quedamos para preguntas.
 
@@ -101,7 +111,11 @@ La Parte I (exploración neurona por neurona) está sólo en el notebook. Parte 
 - **¿La anticipación del contexto no es movimiento?** Puede serlo en parte: en el contexto recompensado el ratón se frena. No tenemos velocidad, sólo el tiempo en el contexto como proxy. Lo marcamos como limitación.
 - **¿Por qué excluyeron neuronas?** Por baja tasa (< 0,5 Hz: los correlogramas quedan vacíos) o porque el sorting las pierde a mitad de sesión (aparecen en < 90 % de los ensayos). Igual están graficadas en la Parte I.
 - **¿Por qué el ritmo y no el espectro directamente?** El espectro del autocorrelograma es el espectro de potencia del tren de spikes (Wiener–Khinchin); lo hacemos desde la ACG porque es la herramienta de nuestra parte.
-- **¿No ver diferencia en r_sc prueba que el contexto no cambia la coordinación?** No: con nuestros ensayos sólo descartamos cambios de r_sc de ~0,015 o más (el 95 % de las permutaciones queda por debajo). Además r_sc mide co-variación de ensayo a ensayo; la coordinación de milisegundos por contexto es IV.3.
+- **¿No ver diferencia en r_sc prueba que el contexto no cambia la coordinación?** No: con nuestros ensayos sólo descartamos cambios de r_sc de ~0,015 o más (el 95 % de las permutaciones queda por debajo). Además r_sc mide co-variación de ensayo a ensayo; por eso miramos también la sincronía de milisegundos (IV.3), que tampoco cambia.
+- **¿Por qué mezclar los ensayos dentro de cada fold y no antes de partir?** Si se mezcla toda la sesión, un vector de test puede tener valores de ensayos vecinos a los de entrenamiento, y la versión mezclada saca ventaja de la deriva lenta. Mezclando dentro de cada fold se respeta la separación por bloques.
+- **¿Por qué el decodificador da casi 1 en CU con 0–1 s?** Porque en CU el ratón sale ~0,5 s después de inhalar: esa ventana incluye la salida y la ventana de respuesta, donde la conducta puede diferir según el olor. Por eso la ventana principal es 0–0,5 s.
+- **¿Los ensambles son reales o los inventa el clustering?** El clustering siempre devuelve grupos. Lo comparamos contra un nulo que desplaza en el tiempo el PSTH de cada neurona por separado: los ensambles reales son más nítidos (p ≈ 0,015), pero poco; por eso decimos «blandos».
+- **¿Cómo controlaron la velocidad?** Con el tiempo en el contexto: dentro de cada tipo de ensayo, quitamos de cada neurona la parte de su actividad que explica ese tiempo y repetimos el test. No cambia nada. Lo que no podemos separar es velocidad y condición entre tipos (en CR, el olor no recompensado siempre es lento).
 - **¿Por qué la ventana de olor es de 0,5 s?** En el contexto no recompensado el ratón sale ~0,5 s después de inhalar; con una ventana más larga compararíamos «dentro del contexto» contra «afuera».
 - **¿Por qué permutación y no un test t sobre los pares?** Los pares no son independientes (cada neurona está en 43 pares) y los grupos tienen distinto número de ensayos; permutar la etiqueta de contexto entre ensayos respeta ambas.
 - **¿Qué es la correlación de señal?** La correlación entre los PSTH promedio de dos neuronas en los cuatro tipos de ensayo: mide si responden a lo mismo con el mismo curso temporal. Mantel permuta las neuronas para testearla.

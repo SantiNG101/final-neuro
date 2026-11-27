@@ -163,7 +163,7 @@ for sh in portada.shapes:
         ps[0].runs[0].text = "Neurociencias · ITBA · 2.º cuatrimestre 2026"
         ps[1].runs[0].text = "Santiago Joaquín Nartallo Galvagno - 62208"
         ps[2].runs[0].text = "Josefina Miguez - 63132"
-notas(portada, "(20 s) Buenos días. Somos [nombres]. Vamos a presentar el análisis de registros de neuronas de la "
+notas(portada, "(20 s) Buenos días. Somos Santiago Nartallo Galvagno y Josefina Miguez. Vamos a presentar el análisis de registros de neuronas de la "
                "corteza piriforme, la corteza olfativa primaria, de un ratón que aprendió a asociar olores y contextos "
                "con una recompensa. La pregunta de fondo es qué información, además del olor, lleva esta corteza.")
 
@@ -179,14 +179,14 @@ for i, (l, neg, resto) in enumerate([
 caja(s, 5.75, 1.4, 3.45, 2.81, CLARO)
 texto(s, 5.95, 1.55, 3.05, 2.55, [
     [("LA IDEA CENTRAL", {"bold": True, "size": 9, "color": ACENTO, "font": NUMEROS})],
-    [("El contexto recompensado cambia cuánto disparan las neuronas de la corteza piriforme, pero no cuánto "
-      "co-varían: la coordinación sigue a qué responde cada neurona.", {"bold": True, "size": 13})],
+    [("El contexto recompensado cambia cuánto disparan las neuronas de la corteza piriforme, pero no cómo se "
+      "coordinan: la red de coordinación es la misma en los dos contextos.", {"bold": True, "size": 13})],
     [(f"{R['estables']} neuronas estables · {R['ensayos']} ensayos · una sesión.",
       {"size": 11, "color": GRIS, "font": NUMEROS})]], espacio=8)
 notas(s, "(40 s) La idea central [señalar el recuadro celeste]: en un ratón entrenado, la corteza piriforme no sólo "
          "detecta olores; su actividad cambia según el contexto en el que espera la recompensa. Pero ese cambio está "
-         "en cuánto disparan las neuronas, no en cuánto co-varían, y la coordinación entre neuronas se organiza según "
-         "qué responde cada una. Vamos en tres partes: un repaso breve de la tarea y de la población; la correlación "
+         "en cuánto disparan las neuronas, no en cómo se coordinan: ni la co-variación entre ensayos, ni la sincronía "
+         "de milisegundos, ni el papel de las correlaciones para leer el olor cambian con el contexto. Vamos en tres partes: un repaso breve de la tarea y de la población; la correlación "
          "neuronal, que es el análisis que elegimos; y nuestra pregunta propia. La exploración neurona por neurona "
          "está completa en el notebook.")
 
@@ -388,18 +388,25 @@ notas(s, f"(105 s) El resultado principal [señalar el gráfico]: en verde el co
          f"un efecto más chico no lo podemos descartar.")
 
 # ---------------------------------------------------------------- 12 · IV.1 controles
-s = nueva("Ni el número de ensayos ni la tasa esconden un efecto")
-imagen(s, FIG / "parte4" / "rsc_controles.png", 0.75, 1.2, w=8.5, h=3.35)
-texto(s, 0.75, 4.62, 8.5, 0.45, [[("Arriba: ", B), ("Δ observado (verde) contra 1000 permutaciones de contexto, que respetan "
+s = nueva("Ni los ensayos, ni la tasa, ni la velocidad esconden un efecto")
+imagen(s, FIG / "parte4" / "rsc_controles.png", 0.75, 1.2, w=8.5, h=3.05)
+VEL = R4["velocidad"]
+texto(s, 0.75, 4.32, 8.5, 0.75, [[("Arriba: ", B), ("Δ observado (verde) contra 1000 permutaciones de contexto, que respetan "
                                  "el número desigual de ensayos. ", {}), ("Abajo: ", B),
-                                 ("Δ por cuartil de tasa del par y Δ ajustado por tasa con regresión: tampoco aparece.", {})]],
-      size=10)
-notas(s, "(75 s) Dos controles [señalar la fila de arriba]: cada histograma es lo que da la diferencia entre contextos "
+                                 ("Δ por cuartil de tasa del par y Δ ajustado por tasa con regresión: tampoco aparece.", {})],
+                                [("Velocidad: ", B), ("quitando, dentro de cada tipo de ensayo, lo que explica el tiempo en el "
+                                 f"contexto, el Δ del olor queda igual (OR {coma(VEL['OR: CR vs CU']['delta_crudo'], 3)} → "
+                                 f"{coma(VEL['OR: CR vs CU']['delta_vel'], 3)}, p = {coma(VEL['OR: CR vs CU']['p_vel'], 2)}).",
+                                 {})]], size=10, espacio=3)
+notas(s, "(90 s) Dos controles [señalar la fila de arriba]: cada histograma es lo que da la diferencia entre contextos "
          "si mezclamos al azar las etiquetas de contexto entre ensayos; la línea verde es lo observado, y cae siempre en "
          "el centro. Este test ya tiene en cuenta que hay el doble de ensayos recompensados. Abajo, el control por tasa: "
          "la correlación de ruido sube con la tasa de disparo, así que si un contexto disparara más podría parecer más "
          "correlacionado sólo por eso. Separamos los pares por cuartil de tasa y además ajustamos por tasa con una "
-         "regresión: el efecto del contexto sigue sin aparecer.")
+         "regresión: el efecto del contexto sigue sin aparecer. Un tercer control [señalar la última línea]: la "
+         "velocidad. El ratón corre muy distinto según el ensayo, y la locomoción puede mover a muchas neuronas juntas. "
+         "Quitamos, dentro de cada tipo de ensayo, la parte de la actividad que explica el tiempo en el contexto, y el "
+         "resultado no cambia; de hecho, sólo tres o cuatro de las 44 neuronas dependen de la velocidad.")
 
 # ---------------------------------------------------------------- 13 · IV.2 ensambles
 comp = R4["composicion_por_cuartil"]
@@ -412,8 +419,9 @@ tarjeta(s, 0.75, 3.95, 2.72, 1.0, "LIKE-TO-LIKE", "", [[(f"Mantel ρ = {coma(R4[
         size_cuerpo=10)
 tarjeta(s, 3.67, 3.95, 2.72, 1.0, "INTERACCIONES DE MS", "", [[(f"Distintas: más inhibitorias ({q1['inhibitoria']} de "
         f"{sum(q1.values())}). Parecidas: más dirigidas y sincronía.", {})]], size_cuerpo=10)
-tarjeta(s, 6.59, 3.95, 2.72, 1.0, "¿Y EL CONTEXTO?", "", [[(f"Efecto chico y de signo opuesto según la época "
-        f"(ρ = {coma(dq[K_APR]['rho'], 2)} y {coma(dq[K_OR]['rho'], 2)}): sin interpretar todavía.", {"color": BLANCO})]],
+tarjeta(s, 6.59, 3.95, 2.72, 1.0, "¿Y EL CONTEXTO?", "", [[(f"Chico y de signo opuesto (ρ = {coma(dq[K_APR]['rho'], 2)} "
+        f"y {coma(dq[K_OR]['rho'], 2).replace('-', '−')}); el control da {coma(dq[K_COR]['rho'], 2)}: débil.",
+        {"color": BLANCO})]],
         fill=ACENTO, oscuro=True, size_cuerpo=10)
 notas(s, f"(120 s) El sub-análisis de ensambles. Para cada par medimos cuánto se parecen sus respuestas, la correlación "
          f"entre sus PSTH en los cuatro tipos de ensayo, y lo comparamos con cuánto co-varían [señalar el primer panel]. "
@@ -423,26 +431,84 @@ notas(s, f"(120 s) El sub-análisis de ensambles. Para cada par medimos cuánto 
          f"Es la firma de ensambles: grupos de neuronas con la misma respuesta que además disparan juntas. El panel del "
          f"medio agrega algo que no esperábamos: las interacciones de milisegundos son más frecuentes en los dos extremos, "
          f"pero de distinto tipo. Entre neuronas muy parecidas dominan las dirigidas y la sincronía; entre neuronas muy "
-         f"distintas, las inhibitorias, {q1['inhibitoria']} de {sum(q1.values())}. Eso es compatible con ensambles que se "
-         f"excitan por dentro y compiten entre sí. Por último [señalar el tercer panel], miramos si el contexto cambia la "
-         f"coordinación sólo en algunos pares: aparece un efecto chico, pero con signo opuesto en la aproximación y en el "
-         f"olor, así que no lo interpretamos hasta tener el análisis de milisegundos por contexto.")
+         f"distintas, las inhibitorias, {q1['inhibitoria']} de {sum(q1.values())}. Eso sugería ensambles que compiten "
+         f"entre sí; más adelante lo testeamos con clustering y no se sostiene. Por último [señalar el tercer panel], "
+         f"miramos si el contexto cambia la coordinación sólo en algunos pares: aparece un efecto chico, con signo opuesto "
+         f"en la aproximación y en el olor. Las barras grises son el corredor, el control: su patrón se parece al de la "
+         f"aproximación, así que no lo tomamos como un resultado firme.")
 
-# ---------------------------------------------------------------- 14 · IV.3–IV.4 pendientes
-s = nueva("Lo que sigue: milisegundos por contexto y decodificación")
-tarjeta(s, 0.75, 1.3, 4.15, 2.6, "IV.3 · PENDIENTE", "¿Cambian las interacciones de ms con el contexto?",
-        [[("Mismo CCG con base de gaussiana hueca, pero sólo con los spikes de cada contexto (aproximación + olor). "
-           "Figura: exceso del pico por par, CR vs CU.", {})]], size_cuerpo=10.5)
-tarjeta(s, 5.1, 1.3, 4.15, 2.6, "IV.4 · PENDIENTE", "¿La coordinación ayuda a decodificar el olor?",
-        [[("Regresión logística OR vs OU con validación por bloques de ensayos, con datos reales y con ensayos mezclados "
-           "entre neuronas (sin correlaciones), en cada contexto.", {"color": BLANCO})]], fill=ACENTO, oscuro=True,
-        size_cuerpo=10.5)
-texto(s, 0.75, 4.15, 8.5, 0.7, [[("También en curso: ", B), ("IV.5 ensambles por clustering y qué codifica cada uno; IV.6 "
-                                 "control de la velocidad (tiempo en el contexto) en r_sc.", {})]], size=10.5)
-notas(s, "(3 min reservados) [PENDIENTE: reemplazar por las diapositivas de resultados de IV.3 y IV.4 cuando estén. "
-         "Ver HANDOFF_parte_IV.md.] Lo que nos falta responder: si el contexto cambia las interacciones de milisegundos, "
-         "aunque no cambie la co-variación entre ensayos; y si esa coordinación ayuda o perjudica a decodificar el olor, "
-         "comparando un decodificador con datos reales contra uno donde mezclamos los ensayos entre neuronas.")
+# ---------------------------------------------------------------- 14 · IV.3 sincronía de ms por contexto
+C3 = R4["ccg_contexto"]
+s = nueva("La sincronía de milisegundos tampoco cambia")
+imagen(s, FIG / "parte4" / "ccg_por_contexto.png", 0.6, 1.15, w=8.8, h=2.8)
+stat(s, 0.75, 4.0, 2.7, f"Δ = {coma(C3['delta_mediana'], 3)}", f"fuerza mediana CR − CU en {C3['n_pares']} pares "
+     f"(p = {coma(C3['p_perm'], 2)}, 1000 permutaciones)", size_num=22, size_desc=9.5, h_desc=0.55)
+stat(s, 3.65, 4.0, 2.7, f"{round(100 * C3['frac_cr_mayor'])} %", "de los pares es más fuerte en CR: mitad y mitad",
+     size_num=22, size_desc=9.5, h_desc=0.55)
+stat(s, 6.55, 4.0, 2.7, f"|Δ| ≥ {coma(C3['mde'], 2)}", "detectable; igual con CR submuestreado y por tipo de interacción",
+     size_num=22, size_desc=9.5, h_desc=0.55)
+notas(s, f"(90 s) r_sc mide co-variación lenta, en cientos de milisegundos. Que no cambie no descarta que cambie la "
+         f"sincronía fina, las interacciones de 1 a 4 milisegundos de la parte tres. Tomamos los {C3['n_pares']} pares con "
+         f"interacción y calculamos su correlograma sólo con la parte del ensayo donde el contexto ya se ve, desde un "
+         f"segundo antes de entrar hasta medio segundo después del olor, por separado en cada contexto. La medida es la "
+         f"fuerza de la interacción: cuánto supera el pico a la línea de base, en proporción, así que no depende de la "
+         f"tasa. [Señalar la izquierda] Cada punto es un par: están repartidos a ambos lados de la diagonal. [Señalar el "
+         f"centro] Permutando el contexto entre ensayos, el valor observado cae en el medio: p {coma(C3['p_perm'], 2)}. "
+         f"[Señalar la derecha] En el par de ejemplo, el pico está en los dos contextos con la misma altura. Las "
+         f"conexiones funcionales parecen una propiedad fija del circuito.")
+
+# ---------------------------------------------------------------- 15 · IV.4 decodificación
+D4 = R4["decodificacion"]
+dcr, dcu = D4["0–0,5 s | CR"], D4["0–0,5 s | CU"]
+s = nueva("El olor se lee igual con o sin correlaciones")
+imagen(s, FIG / "parte4" / "decodificacion.png", 0.6, 1.15, w=8.8, h=2.8)
+stat(s, 0.75, 4.0, 2.7, f"{coma(dcr['real'], 2)} · {coma(dcu['real'], 2)}", "balanced accuracy olor R vs U en CR y CU "
+     f"(azar {coma(dcr['azar'], 2)})", size_num=22, size_desc=9.5, h_desc=0.55)
+stat(s, 3.65, 4.0, 2.7, "real ≈ mezclado", f"sin correlaciones: {coma(dcr['mezcla'], 2)} · {coma(dcu['mezcla'], 2)} "
+     f"(p = {coma(dcr['p_vs_mezcla'], 2)} · {coma(dcu['p_vs_mezcla'], 2)})", size_num=20, size_desc=9.5, h_desc=0.55)
+stat(s, 6.55, 4.0, 2.7, "CV por bloques", "de 20 ensayos contiguos: nunca se testea con vecinos del entrenamiento",
+     size_num=20, size_desc=9.5, h_desc=0.55)
+notas(s, f"(105 s) Aunque el promedio de r_sc no cambie, su estructura podría importar para el código. Entrenamos un "
+         f"decodificador, una regresión logística, para distinguir el olor recompensado del no recompensado con los "
+         f"conteos de las 44 neuronas en el primer medio segundo. Validamos por bloques de ensayos contiguos, porque "
+         f"ensayos vecinos se parecen y partir al azar infla el resultado. [Señalar los puntos] El olor se decodifica "
+         f"bien en los dos contextos, {coma(dcr['real'], 2)} y {coma(dcu['real'], 2)}, contra 0,5 de azar, aunque en el "
+         f"promedio de la población casi no se veía: la información está en el patrón. [Señalar lo celeste] Después "
+         f"mezclamos, dentro de cada olor, los ensayos de cada neurona por separado: cada neurona conserva su respuesta, "
+         f"pero se pierde la co-variación. El decodificador da lo mismo. Con correlaciones tan chicas, no alcanzan para "
+         f"ayudar ni perjudicar. Un cuidado: en el contexto recompensado el olor no recompensado hace frenar al ratón, "
+         f"pero en el no recompensado la velocidad es igual con los dos olores y el olor se decodifica igual de bien. Y la "
+         f"ventana de un segundo en CU da casi 1, pero incluye la salida del contexto: no la leemos como olor.")
+
+# ---------------------------------------------------------------- 16 · IV.5 ensambles
+E5 = R4["ensambles_clusters"]
+ens = E5["ensambles"]
+e_olor = max(ens, key=lambda e: ens[e]["d_olor_hz (mediana)"])
+e_inh = max(ens, key=lambda e: ens[e]["inhibidas"])
+e_ctx = next(e for e in ens if e not in (e_olor, e_inh))
+pct = E5["pct_interaccion"]
+s = nueva("Tres ensambles blandos: olor, contexto y un grupo inhibido")
+imagen(s, FIG / "parte4" / "ensambles_psth.png", 0.75, 1.15, w=8.5, h=2.65)
+tarjeta(s, 0.75, 3.95, 2.72, 1.05, "ESTRUCTURA BLANDA", "", [[(f"k = {E5['k']}; silhouette "
+        f"{coma(E5['silhouette'][str(E5['k'])], 2)} vs {coma(E5['silhouette_nulo_media'], 2)} del azar "
+        f"(p = {coma(E5['p_silhouette'], 3)}).", {})]], size_cuerpo=9.5)
+tarjeta(s, 3.67, 3.95, 2.72, 1.05, f"ENSAMBLE {e_ctx} · CONTEXTO", "", [[(f"{ens[e_ctx]['n']} neuronas: CR por encima de "
+        f"CU antes del olor. La anticipación vive acá.", {"color": BLANCO})]], fill=ACENTO, oscuro=True, size_cuerpo=9.5)
+tarjeta(s, 6.59, 3.95, 2.72, 1.05, "SIN COMPETENCIA", "", [[(f"Inhibitorias {coma(pct['dentro']['inhibitoria'])} % dentro vs "
+        f"{coma(pct['entre']['inhibitoria'])} % entre (p = {coma(E5['log_dentro_entre']['p_inhibitoria'], 2)}): "
+        f"si algo, al revés.", {})]],
+        size_cuerpo=9.5)
+notas(s, f"(90 s) Para cerrar el sub-análisis, agrupamos las neuronas por la semejanza de sus respuestas con clustering "
+         f"jerárquico. El mejor número es {E5['k']}, y los grupos son más nítidos que con datos sin estructura, aunque no "
+         f"mucho: son ensambles blandos, más un continuo con tres polos. [Señalar los paneles] Uno es de olor, "
+         f"{ens[e_olor]['n']} neuronas que se excitan al inhalar, antes con el olor recompensado. Otro, de "
+         f"{ens[e_ctx]['n']} neuronas, separa los contextos antes de que llegue el olor: es la anticipación que vimos en "
+         f"la población, concentrada en un grupo. El tercero, el más grande, tiene casi todas las inhibidas. Y la idea "
+         f"de ensambles que compiten no se sostiene [señalar la tarjeta de la derecha]: las interacciones inhibitorias "
+         f"no son más frecuentes entre ensambles, si algo, al revés. El contexto queda escrito en la tasa de un "
+         f"ensamble, no en la coordinación.")
+
+# ---------------------------------------------------------------- 17 · conclusiones
 
 # ---------------------------------------------------------------- 15 · conclusiones
 s = nueva("Conclusiones")
@@ -452,21 +518,24 @@ texto(s, 0.75, 1.8, 4.1, 2.9, [
     [("La población anticipa ese contexto: ", B), ("dispara más antes del olor.", {})],
     [("Ritmo respiratorio ", B), (f"en {R['ritmicas']} de {R['estables']} neuronas.", {})],
     [("Red funcional: ", B), (f"{R['pares_sig']} pares con interacción a 1–2 ms.", {})],
-    [("El contexto no cambia la co-variación ", B), ("(r_sc), sólo la tasa.", {})],
-    [("Ensambles: ", B), ("se coordinan más las neuronas que responden parecido.", {})],
-    [("IV.3–IV.4: ", B), ("[completar]", {"italic": True, "color": GRIS})]], size=10.5, espacio=5)
+    [("El contexto cambia la tasa, no la coordinación: ", B), ("ni r_sc ni la sincronía de ms.", {})],
+    [("El olor se decodifica en ambos contextos ", B), ("y las correlaciones no cambian esa lectura.", {})],
+    [("Ensambles blandos: ", B), ("like-to-like, y uno de ellos codifica el contexto.", {})]], size=10.5, espacio=5)
 etiqueta(s, 5.1, 1.3, 2.6, "Limitaciones")
 texto(s, 5.1, 1.8, 4.15, 2.9, [
     [("Una sola sesión y un animal: ", B), ("no podemos comparar aprendizaje.", {})],
-    [("Sin lamidos ni velocidad: ", B), ("el tiempo en el contexto es el único proxy de conducta.", {})],
+    [("Sin lamidos ni velocidad continua: ", B), ("controlamos el tiempo en el contexto dentro de cada tipo, "
+                                                  "no entre tipos.", {})],
     [("Potencia: ", B), (f"con ~30–60 ensayos por condición sólo descartamos cambios de r_sc ≥ {coma(min(mdes), 3)}.", {})],
     [("Correlación no es conexión: ", B), ("faltan la geometría de los electrodos y manipulaciones.", {})]],
     size=10.5, espacio=6)
 notas(s, "(90 s) Para cerrar: el ratón aprendió la tarea y la corteza piriforme anticipa el contexto recompensado en su "
          "tasa de disparo; muchas neuronas siguen el ritmo respiratorio y forman una red con interacciones de "
-         "milisegundos. Nuestra pregunta: el contexto cambia cuánto disparan pero no cuánto co-varían, y la coordinación "
-         "se organiza según qué responde cada neurona, como ensambles. [Completar con IV.3 y IV.4.] Limitaciones: una "
-         "sola sesión, sin conducta fina, potencia limitada para efectos chicos, y correlación no es conexión.")
+         "milisegundos. Nuestra pregunta: el contexto cambia cuánto disparan, pero no cómo se coordinan; ni la "
+         "co-variación entre ensayos, ni la sincronía de milisegundos, y quitar las correlaciones no cambia cómo se "
+         "lee el olor. La coordinación sí se organiza según qué responde cada neurona, en ensambles blandos, y uno de "
+         "ellos lleva el contexto en su tasa. Limitaciones: una sola sesión, sin conducta fina, potencia limitada para "
+         "efectos chicos, y correlación no es conexión.")
 
 # ---------------------------------------------------------------- orden final: GRACIAS al final
 gracias = ids[-1]
@@ -506,7 +575,7 @@ GUION.write_text(
     "Se regenera con `presentacion/construir_presentacion.py`.\n\n"
     "## Tiempos\n\n| # | Diapositiva | Duración | Acumulado |\n|---|---|---|---|\n" + "\n".join(filas) +
     "\n\nLa Parte I (exploración neurona por neurona) está sólo en el notebook. Parte II ~1 min, Parte III ~6 min, "
-    "Parte IV ~10 min (3 de ellos reservados para IV.3–IV.4), con margen para preguntas.\n\n"
+    "Parte IV ~12 min, con margen para preguntas.\n\n"
     "## Texto por diapositiva\n\n" + "\n".join(cuerpo) +
     "\n## Preguntas que nos pueden hacer\n\n"
     "- **¿Por qué la línea de base a 0,5–2 s del inicio y no justo antes del contexto?** Porque el contexto se ve "
@@ -528,7 +597,20 @@ GUION.write_text(
     "del tren de spikes (Wiener–Khinchin); lo hacemos desde la ACG porque es la herramienta de nuestra parte.\n"
     "- **¿No ver diferencia en r_sc prueba que el contexto no cambia la coordinación?** No: con nuestros ensayos sólo "
     f"descartamos cambios de r_sc de ~{coma(min(mdes), 3)} o más (el 95 % de las permutaciones queda por debajo). Además "
-    "r_sc mide co-variación de ensayo a ensayo; la coordinación de milisegundos por contexto es IV.3.\n"
+    "r_sc mide co-variación de ensayo a ensayo; por eso miramos también la sincronía de milisegundos (IV.3), que "
+    "tampoco cambia.\n"
+    "- **¿Por qué mezclar los ensayos dentro de cada fold y no antes de partir?** Si se mezcla toda la sesión, un vector "
+    "de test puede tener valores de ensayos vecinos a los de entrenamiento, y la versión mezclada saca ventaja de la "
+    "deriva lenta. Mezclando dentro de cada fold se respeta la separación por bloques.\n"
+    "- **¿Por qué el decodificador da casi 1 en CU con 0–1 s?** Porque en CU el ratón sale ~0,5 s después de inhalar: "
+    "esa ventana incluye la salida y la ventana de respuesta, donde la conducta puede diferir según el olor. Por eso la "
+    "ventana principal es 0–0,5 s.\n"
+    "- **¿Los ensambles son reales o los inventa el clustering?** El clustering siempre devuelve grupos. Lo comparamos "
+    "contra un nulo que desplaza en el tiempo el PSTH de cada neurona por separado: los ensambles reales son más "
+    "nítidos (p ≈ 0,015), pero poco; por eso decimos «blandos».\n"
+    "- **¿Cómo controlaron la velocidad?** Con el tiempo en el contexto: dentro de cada tipo de ensayo, quitamos de "
+    "cada neurona la parte de su actividad que explica ese tiempo y repetimos el test. No cambia nada. Lo que no podemos "
+    "separar es velocidad y condición entre tipos (en CR, el olor no recompensado siempre es lento).\n"
     "- **¿Por qué la ventana de olor es de 0,5 s?** En el contexto no recompensado el ratón sale ~0,5 s después de "
     "inhalar; con una ventana más larga compararíamos «dentro del contexto» contra «afuera».\n"
     "- **¿Por qué permutación y no un test t sobre los pares?** Los pares no son independientes (cada neurona está en 43 "

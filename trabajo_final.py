@@ -1402,16 +1402,18 @@ for cl in ["excitatoria / sincronía", "inhibitoria"]:
 # %%
 fig, axs = plt.subplots(1, 3, figsize=(10, 3.1), gridspec_kw=dict(wspace=0.4, width_ratios=[1.1, 1, 1.1]))
 ax = axs[0]
+todo = np.r_[F_CR, F_CU]
+lim = tuple(np.quantile(todo, [0.01, 0.99]) + np.array([-0.15, 0.15]))   # los pocos extremos se dibujan en el borde
+n_fuera = int(np.sum((F_CR < lim[0]) | (F_CR > lim[1]) | (F_CU < lim[0]) | (F_CU > lim[1])))
 for cl, col in [("excitatoria / sincronía", ACENTO), ("inhibitoria", "#D62728")]:
     m = CLASE_INT == cl
-    ax.scatter(F_CU[m], F_CR[m], s=np.where(BIEN[m], 16, 6), color=col, alpha=0.75, lw=0, label=cl)
-todo = np.r_[F_CR, F_CU]
-lim = (todo.min() - 0.1, todo.max() + 0.1)
+    ax.scatter(np.clip(F_CU[m], *lim), np.clip(F_CR[m], *lim), s=np.where(BIEN[m], 16, 6), color=col, alpha=0.75,
+               lw=0, label=cl)
 ax.plot(lim, lim, color=TINTA, lw=0.7, ls="--")
 ax.set_xlim(lim); ax.set_ylim(lim)
 ax.set_xlabel("Fuerza en CU (exceso relativo)")
 ax.set_ylabel("Fuerza en CR (exceso relativo)")
-ax.set_title(f"Cada punto un par (n = {len(P3)})", fontsize=9)
+ax.set_title(f"Cada punto un par (n = {len(P3)}; {n_fuera} en el borde)", fontsize=9)
 ax.legend(fontsize=6.5, loc="upper left")
 ax = axs[1]
 ax.hist(nulo3, bins=30, color="#C8C8C8", edgecolor="white")
@@ -1797,9 +1799,9 @@ for e, ax in zip(range(1, K5 + 1), axs[0]):
     ax.axvline(0, color=TINTA, lw=0.5, ls="--")
     ax.axhline(0, color="#BBBBBB", lw=0.5)
     t_ = TAB_ENS.loc[e]
-    ax.set_title(f"Ensamble {e} (n = {int(t_.n)})", fontsize=9, color=COL_ENS[e - 1])
-    ax.text(0.98, 0.02, f"{int(t_.excitadas)} exc · {int(t_.inhibidas)} inh · {int(t_.sel_contexto)} sel. contexto",
-            transform=ax.transAxes, ha="right", va="bottom", fontsize=7, color=GRIS)
+    ax.set_title(f"Ensamble {e} (n = {int(t_.n)})\n", fontsize=9, color=COL_ENS[e - 1])
+    ax.text(0.0, 1.02, f"{int(t_.excitadas)} exc · {int(t_.inhibidas)} inh · {int(t_.sel_contexto)} sel. contexto",
+            transform=ax.transAxes, ha="left", va="bottom", fontsize=7, color=GRIS)
     ax.set_xlabel("tiempo desde la inhalación (s)")
 axs[0, 0].set_ylabel("z (media del ensamble)")
 axs[0, -1].legend(fontsize=6.5, loc="upper right")
