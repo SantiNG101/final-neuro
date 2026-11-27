@@ -1631,6 +1631,217 @@ RES44_json["igualados"] = dict(n_or=N_OR, n_ou=N_OU,
 # información no depende de la coordinación entre neuronas: tratarlas como independientes da la misma lectura.
 
 # %% [markdown]
+# ### IV.5 · Ensambles por clustering
+#
+# IV.2 mostró que la coordinación depende de la semejanza de respuesta de forma continua. Acá agrupamos las neuronas en
+# **ensambles** (grupos de neuronas que responden parecido) para preguntar tres cosas:
+# 1. ¿Qué tipos de neurona hay? (¿un ensamble "de olor recompensado", uno inhibido…?)
+# 2. ¿Las interacciones de ms excitatorias y de sincronía son **dentro** de los ensambles y las inhibitorias **entre**
+#    ensambles? (lo que sugería el panel del medio de IV.2: competencia entre ensambles).
+# 3. ¿El Δ r_sc por contexto de la época de olor (concentrado en los pares "distintos" en IV.2) está **entre** ensambles?
+#
+# **Método.**
+# - Distancia = 1 − correlación de señal (la matriz `SENAL` de IV.2: PSTH de los 4 tipos con olor, −0,5 a 1,5 s).
+# - Clustering jerárquico con *average linkage*; el número de ensambles k (2 a 6) se elige con el **silhouette**
+#   (qué tan cerca está cada neurona de su ensamble respecto del más cercano; 1 = perfecto, 0 = en el borde).
+# - **¿Los ensambles son reales?** El clustering siempre devuelve grupos. Nulo: desplazar circularmente en el tiempo el
+#   PSTH concatenado de cada neurona por separado (conserva la forma de cada respuesta, destruye la coincidencia
+#   entre neuronas), recalcular la semejanza y el mejor silhouette; 200 veces.
+# - **Dentro vs entre**: test de permutación sobre las etiquetas de ensamble de las neuronas (1000 veces), que conserva
+#   el tamaño de los ensambles y la estructura de pares.
+
+# %%
+from scipy.cluster.hierarchy import dendrogram, fcluster, linkage
+from scipy.spatial.distance import squareform
+from sklearn.metrics import silhouette_score
+
+KS = range(2, 7)
+
+
+def mejor_cluster(S):
+    D = np.clip(1 - S, 0, 2)
+    np.fill_diagonal(D, 0)
+    Z = linkage(squareform(D, checks=False), method="average")
+    sil = {k: silhouette_score(D, fcluster(Z, k, "maxclust"), metric="precomputed") for k in KS}
+    return Z, D, sil
+
+
+Z5, D5, SIL5 = mejor_cluster(SENAL)
+K5 = max(SIL5, key=SIL5.get)
+ENS = fcluster(Z5, K5, "maxclust")                      # ensamble de cada neurona (orden de ESTABLES)
+
+# nulo: desplazamientos circulares independientes del PSTH concatenado de cada neurona
+PSTH_CAT = np.concatenate([POB["inhalacion"][k][:, vent] for k in TIPOS_OLOR], axis=1)
+sil_nulo = np.empty(200)
+for i in range(200):
+    Xn = np.array([np.roll(f, RNG.integers(len(f))) for f in PSTH_CAT])
+    sil_nulo[i] = max(mejor_cluster(np.corrcoef(Xn))[2].values())
+p_sil = (np.sum(sil_nulo >= SIL5[K5]) + 1) / (len(sil_nulo) + 1)
+print("Silhouette por k:", {k: round(v, 3) for k, v in SIL5.items()}, f"→ k = {K5}")
+print(f"Silhouette nulo (máx. sobre k): media {sil_nulo.mean():.3f}, 95 % {np.quantile(sil_nulo, 0.95):.3f}; p = {p_sil:.3f}")
+
+# descripción de cada ensamble
+desc = clas.loc[ESTABLES].assign(ens=ENS)
+TAB_ENS = pd.DataFrame({
+    "n": desc.groupby("ens").size(),
+    "excitadas": desc.groupby("ens").resp_olor.apply(lambda s: int((s == "excitada").sum())),
+    "inhibidas": desc.groupby("ens").resp_olor.apply(lambda s: int((s == "inhibida").sum())),
+    "sel_olor": desc.groupby("ens").sel_olor.sum(),
+    "sel_contexto": desc.groupby("ens").sel_contexto.sum(),
+    "sel_recompensa": desc.groupby("ens").sel_recompensa.sum(),
+    "d_olor_hz (mediana)": desc.groupby("ens").d_olor_hz.median().round(1),
+})
+print(TAB_ENS.to_string())
+
+# dentro / entre ensambles × tipo de interacción (pares sin artefactos; tipo_int viene de IV.2)
+mismo = ENS[IA] == ENS[IB]
+TAB_DE = pd.crosstab(np.where(mismo, "dentro", "entre"), tipo_int).reindex(
+    columns=["ninguna", "dirigida", "sincronía", "inhibitoria"], fill_value=0)
+TASA_DE = TAB_DE[["dirigida", "sincronía", "inhibitoria"]].div(TAB_DE.sum(1), axis=0) * 100   # % de pares
+print(TAB_DE.to_string())
+print("% de pares con cada interacción:\n" + TASA_DE.round(1).to_string())
+q1_inh = (q_sig == 0) & (tipo_int == "inhibitoria")         # los inhibitorios "entre distintas" de IV.2
+Q1_INH = pd.Series([f"{ENS[i]}-{ENS[j]}" if ENS[i] != ENS[j] else f"dentro {ENS[i]}"
+                    for i, j in zip(IA[q1_inh], IB[q1_inh])]).value_counts()
+print("Pares inhibitorios del Q1 de semejanza (IV.2) según ensamble:", Q1_INH.to_dict())
+
+
+def stat_de(ens):
+    """Razón de tasas dentro/entre (log) para excitatoria+sincronía menos la de inhibitoria."""
+    m = ens[IA] == ens[IB]
+    exc = np.isin(tipo_int, ["dirigida", "sincronía"])
+    inh = tipo_int == "inhibitoria"
+    lr = lambda x: np.log((x[m].mean() + 1e-3) / (x[~m].mean() + 1e-3))
+    return lr(exc) - lr(inh), lr(exc), lr(inh)
+
+
+obs_de = stat_de(ENS)
+nulo_de = np.array([stat_de(RNG.permutation(ENS)) for _ in range(N_PERM)])
+p_de = [(np.sum(np.abs(nulo_de[:, j] - nulo_de[:, j].mean()) >= abs(obs_de[j] - nulo_de[:, j].mean())) + 1) / (N_PERM + 1)
+        for j in range(3)]
+print(f"log(dentro/entre): exc+sinc = {obs_de[1]:+.2f} (p = {p_de[1]:.3f}), inhibitoria = {obs_de[2]:+.2f} "
+      f"(p = {p_de[2]:.3f}); diferencia = {obs_de[0]:+.2f} (p = {p_de[0]:.3f})")
+
+# Δ r_sc por contexto dentro vs entre ensambles (puente con IV.2), con y sin los pares inhibitorios
+DR_DE = {}
+for clave in [("Corredor", "CR vs CU"), ("Aproximación", "CR vs CU"), ("Olor", "OR: CR vs CU")]:
+    o = RES4[clave]
+    d, ok = o["r_cr"] - o["r_cu"], o["ok"]
+    for etq, filtro in [("todos", ok), ("sin inhibitorios", ok & (tipo_int != "inhibitoria"))]:
+        obs_ = d[filtro & ~mismo].mean() - d[filtro & mismo].mean()
+        nul_ = []
+        for _ in range(N_PERM):
+            e = RNG.permutation(ENS)
+            mm = e[IA] == e[IB]
+            nul_.append(d[filtro & ~mm].mean() - d[filtro & mm].mean())
+        nul_ = np.array(nul_)
+        DR_DE[(clave[0], etq)] = dict(dentro=float(d[filtro & mismo].mean()), entre=float(d[filtro & ~mismo].mean()),
+                                      e_dentro=float(d[filtro & mismo].std(ddof=1) / np.sqrt((filtro & mismo).sum())),
+                                      e_entre=float(d[filtro & ~mismo].std(ddof=1) / np.sqrt((filtro & ~mismo).sum())),
+                                      p=float((np.sum(np.abs(nul_) >= abs(obs_)) + 1) / (N_PERM + 1)))
+        r_ = DR_DE[(clave[0], etq)]
+        print(f"Δ r_sc {clave[0]:13s} ({etq:16s}): dentro = {r_['dentro']:+.3f}  entre = {r_['entre']:+.3f}  p = {r_['p']:.3f}")
+
+# %%
+COL_ENS = ["#4A86E8", "#D62728", "#2CA02C", "#FF8C1A", "#9467BD", "#8C564B"]
+orden = dendrogram(Z5, no_plot=True)["leaves"]
+fig = plt.figure(figsize=(11, 3.4))
+gs = fig.add_gridspec(1, 4, width_ratios=[1.25, 0.75, 1, 1], wspace=0.75)
+ax = fig.add_subplot(gs[0])
+im = ax.imshow(SENAL[np.ix_(orden, orden)], cmap="RdBu_r", vmin=-1, vmax=1)
+lim_e = np.r_[0, np.cumsum([np.sum(ENS[orden] == e) for e in pd.unique(ENS[orden])])] - 0.5
+for e, (a_, b_) in zip(pd.unique(ENS[orden]), zip(lim_e[:-1], lim_e[1:])):
+    ax.add_patch(plt.Rectangle((a_, a_), b_ - a_, b_ - a_, fill=False, color=COL_ENS[e - 1], lw=1.6))
+ax.set_xticks([]); ax.set_yticks([])
+ax.set_xlabel("neuronas (orden del dendrograma)")
+ax.set_title("Semejanza de respuesta", fontsize=9)
+fig.colorbar(im, ax=ax, fraction=0.046, pad=0.03)
+ax = fig.add_subplot(gs[1])
+ax.plot(list(SIL5), list(SIL5.values()), "o-", color=TINTA, ms=4)
+ax.axhspan(np.quantile(sil_nulo, 0.025), np.quantile(sil_nulo, 0.975), color="#DDDDDD", zorder=0)
+ax.axhline(sil_nulo.mean(), color=GRIS, lw=0.8, ls="--")
+ax.set_xticks(list(KS))
+ax.set_xlabel("k ensambles"); ax.set_ylabel("silhouette")
+ax.set_title(f"k = {K5} · {p_txt(p_sil)}", fontsize=9)
+ax = fig.add_subplot(gs[2])
+x = np.arange(3)
+for dx, fila, col in [(-0.18, "dentro", TINTA), (0.18, "entre", "#BBBBBB")]:
+    ax.bar(x + dx, TASA_DE.loc[fila].values, width=0.36, color=col, label=f"{fila} ensambles")
+ax.set_xticks(x); ax.set_xticklabels(["dirig.", "sincr.", "inhib."], fontsize=8)
+ax.set_ylabel("% de pares con interacción")
+ax.set_ylim(0, TASA_DE.values.max() * 1.45)
+ax.legend(fontsize=7, loc="upper left")
+ax.set_title(f"Interacciones de ms · {p_txt(p_de[0])}", fontsize=9)
+ax = fig.add_subplot(gs[3])
+x = np.arange(3)
+for dx, lugar, col in [(-0.18, "dentro", TINTA), (0.18, "entre", "#BBBBBB")]:
+    v = [DR_DE[(ep, "todos")][lugar] for ep in ["Corredor", "Aproximación", "Olor"]]
+    e_ = [DR_DE[(ep, "todos")]["e_" + lugar] for ep in ["Corredor", "Aproximación", "Olor"]]
+    ax.bar(x + dx, v, yerr=e_, width=0.36, color=col, error_kw=dict(lw=1, capsize=2))
+ax.axhline(0, color=TINTA, lw=0.6)
+ax.set_xticks(x)
+ax.set_xticklabels([f"{n_}\n{p_txt(DR_DE[(ep, 'todos')]['p'])}" for n_, ep in
+                    zip(["Corr.", "Aprox.", "Olor"], ["Corredor", "Aproximación", "Olor"])], fontsize=7)
+ax.set_ylabel("Δ r_sc (CR − CU)")
+ax.set_title("¿Dónde actúa el contexto?\n(negro dentro · gris entre)", fontsize=9)
+guardar(fig, "parte4/ensambles_clusters.png")
+plt.show()
+
+# PSTH medio de cada ensamble por tipo de ensayo
+fig, axs = plt.subplots(1, K5, figsize=(2.5 * K5, 2.4), sharey=True, squeeze=False)
+tcv = TC["inhalacion"][vent]
+for e, ax in zip(range(1, K5 + 1), axs[0]):
+    m = ENS == e
+    for k in TIPOS_OLOR:
+        ax.plot(tcv, POB["inhalacion"][k][m][:, vent].mean(0), color=COLORES[k], lw=1.3, label=ETIQ[k])
+    ax.axvline(0, color=TINTA, lw=0.5, ls="--")
+    ax.axhline(0, color="#BBBBBB", lw=0.5)
+    t_ = TAB_ENS.loc[e]
+    ax.set_title(f"Ensamble {e} (n = {int(t_.n)})", fontsize=9, color=COL_ENS[e - 1])
+    ax.text(0.98, 0.02, f"{int(t_.excitadas)} exc · {int(t_.inhibidas)} inh · {int(t_.sel_contexto)} sel. contexto",
+            transform=ax.transAxes, ha="right", va="bottom", fontsize=7, color=GRIS)
+    ax.set_xlabel("tiempo desde la inhalación (s)")
+axs[0, 0].set_ylabel("z (media del ensamble)")
+axs[0, -1].legend(fontsize=6.5, loc="upper right")
+guardar(fig, "parte4/ensambles_psth.png")
+plt.show()
+
+RES45 = dict(k=int(K5), silhouette={int(k): float(v) for k, v in SIL5.items()},
+             silhouette_nulo_media=float(sil_nulo.mean()), silhouette_nulo_q95=float(np.quantile(sil_nulo, 0.95)),
+             p_silhouette=float(p_sil),
+             ensambles={int(e): {c: (int(v) if c != "d_olor_hz (mediana)" else float(v)) for c, v in fila.items()}
+                        for e, fila in TAB_ENS.iterrows()},
+             pct_interaccion={f: {c: float(v) for c, v in TASA_DE.loc[f].items()} for f in TASA_DE.index},
+             log_dentro_entre=dict(exc_sinc=float(obs_de[1]), p_exc_sinc=float(p_de[1]), inhibitoria=float(obs_de[2]),
+                                   p_inhibitoria=float(p_de[2]), diferencia=float(obs_de[0]), p_diferencia=float(p_de[0])),
+             delta_rsc_dentro_entre={f"{k[0]} | {k[1]}": v for k, v in DR_DE.items()})
+
+# %% [markdown]
+# **Cómo leerlo.**
+# - **Matriz** (izquierda): la semejanza de respuesta ordenada por el dendrograma; los recuadros son los ensambles. Hay
+#   bloques, pero difusos. **Silhouette**: el mejor k es 3, con silhouette 0,19 contra 0,14 del nulo (95 % = 0,17;
+#   p ≈ 0,015). Hay estructura de ensambles **real pero blanda**: más un continuo con tres "polos" que grupos separados.
+# - **Qué es cada ensamble** (PSTH medio):
+#   - **Ensamble 3 (6 neuronas) · "de olor"**: excitado por la inhalación con los cuatro tipos, pero **antes** con el olor
+#     recompensado (OR, rojo y naranja: pico a ~0,25 s) que con el no recompensado (~0,6 s).
+#   - **Ensamble 2 (12) · "de contexto"**: separa los contextos **antes** del olor (CR, rojo y negro, por encima de CU) y
+#     sube tarde en OU·CR, cuando el ratón se queda en el contexto recompensado con el olor no recompensado. Es la
+#     anticipación de la Parte II, concentrada en un grupo de neuronas.
+#   - **Ensamble 1 (26)**: respuesta media débil, con la mayoría de las inhibidas por el olor; es el grupo más
+#     heterogéneo.
+# - **Interacciones de ms dentro vs entre**: la hipótesis "excitación dentro, inhibición entre ensambles" **no se sostiene**.
+#   Las dirigidas y de sincronía son igual de frecuentes dentro que entre, y las inhibitorias tienden a ser más
+#   frecuentes **dentro** (6,0 % vs 2,8 % de los pares; p ≈ 0,16). De los 16 pares inhibitorios entre neuronas
+#   "distintas" de IV.2, 7 quedan **dentro** del ensamble 1 (el heterogéneo): la observación de IV.2 era sobre semejanza
+#   continua y no se traduce en "inhibición entre grupos".
+# - **¿Dónde actúa el contexto?** En la época de olor el Δ r_sc es mayor entre ensambles (+0,019) que dentro (+0,001), en la
+#   misma dirección que el Q1 de IV.2, pero no es significativo (p ≈ 0,3), tampoco sacando los pares inhibitorios.
+#
+# **Conclusión de IV.5.** La población se organiza en tres ensambles blandos con roles interpretables (olor, contexto, y
+# un grupo mayormente inhibido), pero la coordinación fina no sigue esos límites, y el efecto del contexto sobre r_sc no
+# se concentra en ellos de forma detectable.
+
+# %% [markdown]
 # ### Resumen de la Parte IV (IV.1–IV.4) y lo que sigue
 #
 # Los números se guardan en `figuras/resumen_parte4.json` (los usa la presentación). Lo que falta (IV.5–IV.6) está
@@ -1650,6 +1861,6 @@ res4["delta_vs_semejanza"] = {f"{k[0]} | {k[1]}": dict(rho=float(v["rho"]), p=fl
 res4["n_pares"] = int(len(pares_ok))
 res4["ccg_contexto"] = RES43
 res4["decodificacion"] = RES44_json
-res4["decodificacion"] = RES44_json
+res4["ensambles_clusters"] = RES45
 (FIG / "resumen_parte4.json").write_text(pd.Series(res4, dtype=object).to_json(force_ascii=False, indent=1), encoding="utf-8")
 pd.Series(res4, dtype=object)

@@ -189,5 +189,111 @@
     0.1563154762
    ]
   }
+ },
+ "ensambles_clusters":{
+  "k":3,
+  "silhouette":{
+   "2":0.185305998,
+   "3":0.1898089457,
+   "4":0.1577252667,
+   "5":0.1591805813,
+   "6":0.1641110475
+  },
+  "silhouette_nulo_media":0.1424300783,
+  "silhouette_nulo_q95":0.1690231586,
+  "p_silhouette":0.0149253731,
+  "ensambles":{
+   "1":{
+    "n":26,
+    "excitadas":3,
+    "inhibidas":8,
+    "sel_olor":7,
+    "sel_contexto":9,
+    "sel_recompensa":9,
+    "d_olor_hz (mediana)":-0.2
+   },
+   "2":{
+    "n":12,
+    "excitadas":2,
+    "inhibidas":1,
+    "sel_olor":5,
+    "sel_contexto":5,
+    "sel_recompensa":4,
+    "d_olor_hz (mediana)":0.3
+   },
+   "3":{
+    "n":6,
+    "excitadas":4,
+    "inhibidas":0,
+    "sel_olor":4,
+    "sel_contexto":3,
+    "sel_recompensa":2,
+    "d_olor_hz (mediana)":4.4
+   }
+  },
+  "pct_interaccion":{
+   "dentro":{
+    "dirigida":6.9825436409,
+    "sincronía":4.2394014963,
+    "inhibitoria":5.9850374065
+   },
+   "entre":{
+    "dirigida":6.3551401869,
+    "sincronía":4.1121495327,
+    "inhibitoria":2.8037383178
+   }
+  },
+  "log_dentro_entre":{
+   "exc_sinc":0.0689795354,
+   "p_exc_sinc":0.8161838162,
+   "inhibitoria":0.7398338918,
+   "p_inhibitoria":0.1558441558,
+   "diferencia":-0.6708543564,
+   "p_diferencia":0.2007992008
+  },
+  "delta_rsc_dentro_entre":{
+   "Corredor | todos":{
+    "dentro":0.0060600893,
+    "entre":-0.0001378682,
+    "e_dentro":0.0079038667,
+    "e_entre":0.0073369238,
+    "p":0.5844155844
+   },
+   "Corredor | sin inhibitorios":{
+    "dentro":0.0092251816,
+    "entre":-0.000837725,
+    "e_dentro":0.0081939859,
+    "e_entre":0.0074542007,
+    "p":0.3896103896
+   },
+   "Aproximación | todos":{
+    "dentro":0.0003909833,
+    "entre":-0.0041011358,
+    "e_dentro":0.0081294561,
+    "e_entre":0.0070435239,
+    "p":0.7062937063
+   },
+   "Aproximación | sin inhibitorios":{
+    "dentro":-0.0027472579,
+    "entre":-0.0049378008,
+    "e_dentro":0.0083619818,
+    "e_entre":0.0072103808,
+    "p":0.8441558442
+   },
+   "Olor | todos":{
+    "dentro":0.0011150531,
+    "entre":0.0188254321,
+    "e_dentro":0.0118811725,
+    "e_entre":0.0103406458,
+    "p":0.2967032967
+   },
+   "Olor | sin inhibitorios":{
+    "dentro":0.0022934681,
+    "entre":0.0176920513,
+    "e_dentro":0.0121226478,
+    "e_entre":0.0105315131,
+    "p":0.3536463536
+   }
+  }
  }
 }
