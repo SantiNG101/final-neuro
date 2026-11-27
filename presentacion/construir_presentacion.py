@@ -162,7 +162,7 @@ for sh in portada.shapes:
     elif sh.is_placeholder and sh.placeholder_format.idx == 1:
         ps[0].runs[0].text = "Neurociencias · ITBA · 2.º cuatrimestre 2026"
         ps[1].runs[0].text = "Santiago Joaquín Nartallo Galvagno - 62208"
-        ps[2].runs[0].text = "[completar resto del grupo]"
+        ps[2].runs[0].text = "Josefina Miguez - 63132"
 notas(portada, "(20 s) Buenos días. Somos [nombres]. Vamos a presentar el análisis de registros de neuronas de la "
                "corteza piriforme, la corteza olfativa primaria, de un ratón que aprendió a asociar olores y contextos "
                "con una recompensa. La pregunta de fondo es qué información, además del olor, lleva esta corteza.")

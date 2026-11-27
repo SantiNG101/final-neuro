@@ -28,7 +28,8 @@ Comparaciones: CR (tipos 1, 3, 5) vs CU (2, 4, 6) en corredor y aproximación; O
 | **IV.1** r_sc por contexto y época, permutando la etiqueta de contexto (1000 veces) | **Ninguna diferencia** en ninguna época (p = 0,75 / 0,78 / 0,46 / 0,49). Diferencia detectable con estos ensayos: \|Δ\| ≈ 0,015–0,026 | `figuras/parte4/rsc_por_contexto.png` |
 | **IV.1** controles | Δ ajustado por tasa (regresión) tampoco aparece (p ≥ 0,45). En la aproximación la **tasa** sí sube en CR (6,6 vs 6,0 Hz): el contexto cambia cuánto disparan, no cuánto co-varían | `figuras/parte4/rsc_controles.png` |
 | **IV.2** semejanza de respuesta vs acoplamiento | **Like-to-like**: Mantel ρ = 0,13, p = 0,001. Interacciones de ms más frecuentes en los extremos: entre neuronas parecidas dominan dirigidas y sincronía; entre muy distintas, inhibitorias (16 de 38) | `figuras/parte4/ensambles_semejanza.png` |
-| **IV.2** ¿dónde actúa el contexto? | Efecto chico y de **signo opuesto** según la época (aproximación ρ = +0,08, p = 0,015; olor ρ = −0,07, p = 0,03). Todavía sin interpretar | mismo panel derecho |
+| **IV.2** ¿dónde actúa el contexto? | Efecto chico y de **signo opuesto** según la época (aproximación ρ = +0,08, p = 0,015; olor ρ = −0,07, p = 0,03). **Control corredor: ρ = 0,04, p = 0,23** (pasa, pero el patrón por cuartil de la aproximación se parece al del corredor; el Δ grande en Q1 del olor es lo único distinto del control) | mismo panel derecho |
+| **IV.3** interacciones de ms por contexto (140 pares, CCG por ensayo sumado, 1000 permutaciones) | **Estables**: fuerza mediana 0,29 (CR) vs 0,27 (CU), Δ = −0,002, p = 0,95; igual con pares bien medidos, CR submuestreado y por tipo de interacción. Δ detectable ≈ 0,05 | `figuras/parte4/ccg_por_contexto.png` |
 
 Todos los números están en `figuras/resumen_parte4.json`, que la presentación lee automáticamente.
 
@@ -50,6 +51,8 @@ py -3.12 herramientas/py_a_notebook.py trabajo_final.py trabajo_final.ipynb
 py -3.12 -m jupyter nbconvert --to notebook --execute --inplace trabajo_final.ipynb
 py -3.12 presentacion/construir_presentacion.py
 ```
+
+Si `py -3.12` no existe, hay un entorno local: `py -3.14 -m venv .venv` + `.venv/Scripts/python -m pip install numpy pandas scipy matplotlib scikit-learn nbformat nbconvert ipykernel python-pptx`, y usar `.venv/Scripts/python` en lugar de `py -3.12`.
 
 El análisis completo tarda ~2 minutos (lo ejecuta `nbconvert`, que además regenera todas las figuras y los `.json`).
 Si corrés el `.py` directo en una terminal, antes poné `$env:MPLBACKEND = "Agg"` para que los gráficos no abran
@@ -153,7 +156,7 @@ texto con alto negativo (el helper `tarjeta` ya lo evita) y renombrar las partes
 
 ## 7. Checklist
 
-- [ ] IV.3 CCG por contexto + figura + números en `res4`
+- [x] IV.3 CCG por contexto + figura + números en `res4` (nulo: Δ fuerza mediana −0,002, p = 0,95; `res4["ccg_contexto"]`)
 - [ ] IV.4 decodificación real vs mezclada + figura + números en `res4`
 - [ ] IV.5 ensambles por clustering + figura
 - [ ] IV.6 control de velocidad + conclusiones en el notebook

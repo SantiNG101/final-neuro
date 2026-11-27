@@ -90,7 +90,39 @@
   "Olor | OR: CR vs CU":{
    "rho":-0.0696709363,
    "p":0.031968032
+  },
+  "Corredor | CR vs CU":{
+   "rho":0.0423133336,
+   "p":0.2307692308
   }
  },
- "n_pares":936
+ "n_pares":936,
+ "ccg_contexto":{
+  "n_pares":140,
+  "n_bien":99,
+  "fuerza_cr_mediana":0.2931576252,
+  "fuerza_cu_mediana":0.273222324,
+  "delta_mediana":-0.0019339935,
+  "p_perm":0.9460539461,
+  "p_wilcoxon":0.6382858364,
+  "delta_mediana_bien":-0.0061299683,
+  "p_wilcoxon_bien":0.8232409005,
+  "delta_mediana_submuestreo":0.0070312863,
+  "delta_submuestreo_ic95":[
+   -0.0220288524,
+   0.0392539714
+  ],
+  "frac_cr_mayor":0.4857142857,
+  "mde":0.048883627,
+  "excitatoria \/ sincronía":{
+   "n":128,
+   "delta_mediana":-0.0009123564,
+   "p_wilcoxon":0.6720686061
+  },
+  "inhibitoria":{
+   "n":12,
+   "delta_mediana":-0.0190629835,
+   "p_wilcoxon":0.8500976562
+  }
+ }
 }

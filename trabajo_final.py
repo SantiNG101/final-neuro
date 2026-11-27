@@ -13,7 +13,7 @@
 # | I | Perfiles de respuesta: raster + PSTH por neurona, 4 alineaciones; clasificación de respuestas |
 # | II | Actividad poblacional por tipo de ensayo |
 # | III | Correlación neuronal: autocorrelogramas y cross-correlogramas |
-# | IV | Análisis libre: ¿el contexto recompensado cambia la coordinación? (IV.1–IV.2 hechos; IV.3–IV.6 en el handoff) |
+# | IV | Análisis libre: ¿el contexto recompensado cambia la coordinación? (IV.1–IV.3 hechos; IV.4–IV.6 en el handoff) |
 #
 # **Convención de colores** (la de la consigna): OR·CR rojo, OR·CU naranja, OU·CR negro, OU·CU gris.
 # Los ensayos sin olor (sólo contexto) van en azul (CR) y celeste (CU).
@@ -1024,7 +1024,7 @@ pd.Series(resumen, dtype=object)
 # La ventana de olor termina a los 0,5 s porque en el contexto no recompensado el ratón sale ~0,5 s después de inhalar:
 # así las dos condiciones se comparan dentro del contexto.
 #
-# **Plan completo** (esta entrega cubre IV.1 y IV.2; el resto está en `HANDOFF_parte_IV.md`):
+# **Plan completo** (esta entrega cubre IV.1 a IV.3; el resto está en `HANDOFF_parte_IV.md`):
 # IV.1 r_sc por contexto y época con controles · IV.2 ensambles: semejanza de respuesta vs acoplamiento ·
 # IV.3 CCG de ms por contexto · IV.4 ¿la coordinación ayuda o perjudica a decodificar el olor? ·
 # IV.5 ensambles por clustering · IV.6 control de la velocidad y cierre.
@@ -1180,7 +1180,8 @@ plt.show()
 # - **Test de Mantel**: la correlación entre dos matrices de pares no se puede testear como si los pares fueran
 #   independientes (cada neurona participa en 43 pares). Se permutan las etiquetas de las neuronas en una de las matrices
 #   (1000 veces) y se recalcula la correlación de Spearman.
-# - **Puente con IV.1**: ¿el Δ r_sc por contexto depende de la semejanza de respuesta del par?
+# - **Puente con IV.1**: ¿el Δ r_sc por contexto depende de la semejanza de respuesta del par? El corredor (antes de ver
+#   el contexto) es el control negativo: ahí la relación no debería aparecer.
 
 # %%
 tc = TC["inhalacion"]
@@ -1216,7 +1217,9 @@ COMP_Q.index = ["Q1 distintas", "Q2", "Q3", "Q4 parecidas"]
 print(COMP_Q.to_string())
 
 DELTA_Q = {}
-for clave in [("Aproximación", "CR vs CU"), ("Olor", "OR: CR vs CU")]:
+# el corredor va al final como control negativo (ahí el contexto todavía no se ve: no debería haber efecto);
+# al final para no alterar la secuencia aleatoria de las otras dos comparaciones
+for clave in [("Aproximación", "CR vs CU"), ("Olor", "OR: CR vs CU"), ("Corredor", "CR vs CU")]:
     o = RES4[clave]
     d = (o["r_cr"] - o["r_cu"])
     ok = o["ok"]
@@ -1256,22 +1259,355 @@ ax.legend(fontsize=6.5, loc="upper center", ncol=3, bbox_to_anchor=(0.5, 1.0))
 ax.set_ylim(0, max(abajo) * 1.3)
 ax.set_title(f"Interacción fina por semejanza · {p_txt(p_chi)}", fontsize=9)
 ax = axs[2]
-for dx, (clave, col) in zip([-0.17, 0.17], [(("Aproximación", "CR vs CU"), VERDE_CR), (("Olor", "OR: CR vs CU"), "#D62728")]):
+for dx, (clave, col) in zip([-0.27, 0.0, 0.27], [(("Corredor", "CR vs CU"), "#BBBBBB"),
+                                                  (("Aproximación", "CR vs CU"), VERDE_CR),
+                                                  (("Olor", "OR: CR vs CU"), "#D62728")]):
     dq = DELTA_Q[clave]
-    ax.bar(np.arange(4) + dx, dq["m"], yerr=dq["e"], width=0.34, color=col, alpha=0.85,
+    ax.bar(np.arange(4) + dx, dq["m"], yerr=dq["e"], width=0.26, color=col, alpha=0.85,
            error_kw=dict(lw=1, capsize=2), label=f"{clave[0]} (ρ = {coma_py(dq['rho'], 2)}, {p_txt(dq['p'])})")
 ax.axhline(0, color=TINTA, lw=0.6)
 ax.set_xticks(range(4)); ax.set_xticklabels(["Q1\ndistintas", "Q2", "Q3", "Q4\nparecidas"])
 ax.set_ylabel("Δ r_sc (CR − CU)")
 ax.set_title("¿Dónde actúa el contexto?", fontsize=9)
+ax.set_ylim(top=ax.get_ylim()[1] * 1.45)           # espacio para la leyenda
 ax.legend(fontsize=6.5, loc="upper right")
 guardar(fig, "parte4/ensambles_semejanza.png")
 plt.show()
 
 # %% [markdown]
-# ### Resumen de la Parte IV (primera mitad) y lo que sigue
+# ### IV.3 · ¿Cambian las interacciones de milisegundos con el contexto?
 #
-# Los números se guardan en `figuras/resumen_parte4.json` (los usa la presentación). Lo que falta (IV.3–IV.6) está
+# r_sc mide co-variación **lenta** (conteos en cientos de ms, de ensayo a ensayo). Que no cambie con el contexto no
+# descarta que cambie la **sincronía fina**: las interacciones de 1–5 ms que encontramos en la Parte III.b.
+#
+# **Método.**
+# - **Ventana por ensayo**: de 1 s antes de entrar al contexto hasta 0,5 s después de la primera inhalación (en los
+#   ensayos sin olor, hasta 0,9 s después de entrar, la latencia típica de inhalación). Es la parte del ensayo donde el
+#   contexto ya se ve.
+# - **CCG por ensayo**: como las ventanas están separadas por segundos, el CCG de un conjunto de ensayos es la **suma** de
+#   los CCG de cada ensayo. Los calculamos una vez (±50 ms, bins de 1 ms) y después cualquier partición CR/CU, real o
+#   permutada, es una suma.
+# - **Pares**: los 140 con interacción significativa en la Parte III.b (el resto casi no tiene coincidencias).
+# - **Medida** (*fuerza de la interacción*): en los bins que definen la interacción de cada par (|lag| ≤ 5 ms, p < 0,01 en
+#   el CCG de toda la sesión), exceso relativo sobre la base de gaussiana hueca: (conteo − base) / base. Para los pares
+#   inhibitorios se invierte el signo, así que en todos los casos **más alto = interacción más fuerte**. Al ser relativo a
+#   la base, no depende de la tasa de disparo.
+# - **Test**: mediana entre pares del Δ fuerza (CR − CU), contra 1000 permutaciones de la etiqueta de contexto entre
+#   ensayos (dentro de cada clase: con olor recompensado, no recompensado, sin olor). Además Wilcoxon pareado.
+# - **Control de muestra**: CR tiene más ensayos (100 vs 75) y ventanas más largas (el ratón va más lento), así que su CCG
+#   es menos ruidoso. Repetimos con CR submuestreado a 75 ensayos.
+
+# %%
+TR3 = VALIDOS
+CTX3 = TR3.tipo.map(CTX).values
+CLASE3 = TR3.tipo.map(ODOR_CLASE).values
+INI3 = TR3.t_entrada.values - 1.0
+FIN3 = np.where(TR3.tipo.isin(TIPOS_OLOR), TR3.t_inhal.values + 0.5, TR3.t_entrada.values + 0.9)
+SPK3 = {n: [spikes[n][np.searchsorted(spikes[n], a):np.searchsorted(spikes[n], b)] for a, b in zip(INI3, FIN3)]
+        for n in ESTABLES}
+
+P3 = pares_ok[pares_ok.significativo].reset_index(drop=True)
+L_MS = np.round(LAG_CCG * 1e3).astype(int)
+CC3 = np.zeros((len(P3), len(TR3), len(L_MS)))         # par × ensayo × bin
+for i, r in enumerate(P3.itertuples()):
+    for j in range(len(TR3)):
+        sa, sb = SPK3[r.a][j], SPK3[r.b][j]
+        if len(sa) and len(sb):
+            CC3[i, j] = correlograma(sa, sb, 0.05, 0.001)[0]
+
+# bins que definen la interacción de cada par (del CCG de toda la sesión) y signo
+FIRMA, SIGNO, CLASE_INT = [], [], []
+for r in P3.itertuples():
+    c, base = CCG[(r.a, r.b)]
+    inh = (r.inh_ab or r.inh_ba) and not (r.exc_ab or r.exc_ba or r.sincronia)
+    w = np.abs(L_MS) <= 5
+    p = p_defecto(c, base) if inh else p_exceso(c, base)
+    b = w & (p < 0.01)
+    if not b.any():
+        ratio = c / np.maximum(base, 1e-9)
+        b = np.zeros_like(w)
+        b[np.where(w)[0][np.argmin(ratio[w]) if inh else np.argmax(ratio[w])]] = True
+    FIRMA.append(b)
+    SIGNO.append(-1 if inh else 1)
+    CLASE_INT.append("inhibitoria" if inh else "excitatoria / sincronía")
+FIRMA, SIGNO, CLASE_INT = np.array(FIRMA), np.array(SIGNO), np.array(CLASE_INT)
+
+
+def fuerza(m):
+    """Fuerza de la interacción de cada par usando los ensayos de la máscara m. Devuelve (fuerza, base en la firma)."""
+    S = CC3[:, m].sum(1)
+    f, nb = np.empty(len(P3)), np.empty(len(P3))
+    for i in range(len(P3)):
+        base = base_gauss_hueca(S[i])
+        b = FIRMA[i]
+        nb[i] = base[b].sum()
+        f[i] = SIGNO[i] * (S[i][b].sum() - nb[i]) / max(nb[i], 1e-9)
+    return f, nb
+
+
+def permutar_ctx(ctx, clase):
+    out = ctx.copy()
+    for o in np.unique(clase):
+        m = np.where(clase == o)[0]
+        out[m] = RNG.permutation(ctx[m])
+    return out
+
+
+F_CR, NB_CR = fuerza(CTX3 == "CR")
+F_CU, NB_CU = fuerza(CTX3 == "CU")
+D3 = F_CR - F_CU
+BIEN = (NB_CR >= 10) & (NB_CU >= 10)                   # pares con suficientes coincidencias esperadas en ambos contextos
+
+nulo3 = np.empty(N_PERM)
+for k in range(N_PERM):
+    cp = permutar_ctx(CTX3, CLASE3)
+    nulo3[k] = np.median(fuerza(cp == "CR")[0] - fuerza(cp == "CU")[0])
+p3 = (np.sum(np.abs(nulo3) >= abs(np.median(D3))) + 1) / (N_PERM + 1)
+p3_w = stats.wilcoxon(F_CR, F_CU).pvalue
+p3_w_bien = stats.wilcoxon(F_CR[BIEN], F_CU[BIEN]).pvalue
+
+# control de muestra: CR submuestreado al azar al número de ensayos CU (200 veces)
+idx_cr = np.where(CTX3 == "CR")[0]
+n_cu = int((CTX3 == "CU").sum())
+med_sub = np.empty(200)
+for k in range(200):
+    m = np.zeros(len(TR3), bool)
+    m[RNG.choice(idx_cr, n_cu, replace=False)] = True
+    med_sub[k] = np.median(fuerza(m)[0] - F_CU)
+
+RES43 = dict(n_pares=int(len(P3)), n_bien=int(BIEN.sum()),
+             fuerza_cr_mediana=float(np.median(F_CR)), fuerza_cu_mediana=float(np.median(F_CU)),
+             delta_mediana=float(np.median(D3)), p_perm=float(p3), p_wilcoxon=float(p3_w),
+             delta_mediana_bien=float(np.median(D3[BIEN])), p_wilcoxon_bien=float(p3_w_bien),
+             delta_mediana_submuestreo=float(np.median(med_sub)),
+             delta_submuestreo_ic95=[float(x) for x in np.quantile(med_sub, [0.025, 0.975])],
+             frac_cr_mayor=float(np.mean(D3 > 0)),
+             mde=float(np.quantile(np.abs(nulo3), 0.95)))
+for cl in ["excitatoria / sincronía", "inhibitoria"]:
+    m = CLASE_INT == cl
+    RES43[cl] = dict(n=int(m.sum()), delta_mediana=float(np.median(D3[m])),
+                     p_wilcoxon=float(stats.wilcoxon(F_CR[m], F_CU[m]).pvalue) if m.sum() >= 6 else None)
+
+print(f"Pares: {len(P3)} ({BIEN.sum()} con ≥ 10 coincidencias esperadas por contexto)")
+print(f"Fuerza mediana: CR = {np.median(F_CR):.2f}  CU = {np.median(F_CU):.2f}  "
+      f"Δ mediano = {np.median(D3):+.3f}  (permutación p = {p3:.3f}; Wilcoxon p = {p3_w:.3f}); "
+      f"|Δ| detectable ≈ {RES43['mde']:.3f}")
+print(f"Sólo pares bien medidos: Δ mediano = {np.median(D3[BIEN]):+.3f} (Wilcoxon p = {p3_w_bien:.3f})")
+print(f"CR submuestreado a {n_cu} ensayos: Δ mediano = {np.median(med_sub):+.3f} "
+      f"(IC 95 % entre submuestreos {np.quantile(med_sub, 0.025):+.3f} a {np.quantile(med_sub, 0.975):+.3f})")
+for cl in ["excitatoria / sincronía", "inhibitoria"]:
+    print(f"  {cl}: n = {RES43[cl]['n']}, Δ mediano = {RES43[cl]['delta_mediana']:+.3f}, "
+          f"Wilcoxon p = {RES43[cl]['p_wilcoxon']:.3f}")
+
+# %%
+fig, axs = plt.subplots(1, 3, figsize=(10, 3.1), gridspec_kw=dict(wspace=0.4, width_ratios=[1.1, 1, 1.1]))
+ax = axs[0]
+for cl, col in [("excitatoria / sincronía", ACENTO), ("inhibitoria", "#D62728")]:
+    m = CLASE_INT == cl
+    ax.scatter(F_CU[m], F_CR[m], s=np.where(BIEN[m], 16, 6), color=col, alpha=0.75, lw=0, label=cl)
+todo = np.r_[F_CR, F_CU]
+lim = (todo.min() - 0.1, todo.max() + 0.1)
+ax.plot(lim, lim, color=TINTA, lw=0.7, ls="--")
+ax.set_xlim(lim); ax.set_ylim(lim)
+ax.set_xlabel("Fuerza en CU (exceso relativo)")
+ax.set_ylabel("Fuerza en CR (exceso relativo)")
+ax.set_title(f"Cada punto un par (n = {len(P3)})", fontsize=9)
+ax.legend(fontsize=6.5, loc="upper left")
+ax = axs[1]
+ax.hist(nulo3, bins=30, color="#C8C8C8", edgecolor="white")
+ax.axvline(np.median(D3), color=VERDE_CR, lw=2)
+ax.set_xlabel("Δ fuerza mediana (CR − CU)")
+ax.set_yticks([])
+ax.set_title(f"Permutando el contexto · {p_txt(p3)}", fontsize=9)
+ax = axs[2]
+i_ej = int(np.argmax(np.where(CLASE_INT == "excitatoria / sincronía", NB_CR + NB_CU, -1)))
+r_ej = P3.iloc[i_ej]
+for m, col, lab in [(CTX3 == "CR", VERDE_CR, "CR"), (CTX3 == "CU", GRIS_CU, "CU")]:
+    S = CC3[i_ej, m].sum(0)
+    ax.step(L_MS, S / base_gauss_hueca(S), where="mid", color=col, lw=1.2, label=lab)
+ax.axhline(1, color=TINTA, lw=0.5, ls=":")
+ax.set_xlim(-20, 20)
+ax.set_xlabel("Lag (ms)")
+ax.set_ylabel("Conteo / base")
+ax.set_title(f"Ejemplo N{int(r_ej.a)} → N{int(r_ej.b)}", fontsize=9)
+ax.legend(fontsize=7)
+guardar(fig, "parte4/ccg_por_contexto.png")
+plt.show()
+
+# %% [markdown]
+# **Cómo leerlo.**
+# - **Izquierda**: si el contexto recompensado reforzara (o debilitara) las interacciones finas, los puntos quedarían
+#   sistemáticamente por encima (o por debajo) de la diagonal. Están repartidos a ambos lados: la dispersión es ruido de
+#   estimación (cada par tiene pocas coincidencias por contexto; los puntos grandes son los pares bien medidos).
+# - **Centro**: distribución del Δ mediano permutando la etiqueta de contexto. No está centrada exactamente en 0 porque
+#   CR tiene más ensayos y eso sesga levemente el cociente conteo/base; por eso se compara contra la permutación (que
+#   conserva los tamaños de grupo) y no contra 0. El Δ observado cae en el medio.
+# - **Derecha**: un par de ejemplo (el de más coincidencias). El pico a +1–4 ms está en los dos contextos, con la misma altura.
+#
+# **Conclusión de IV.3.** Las interacciones de milisegundos son **estables entre contextos**: lo que encontramos en la
+# Parte III.b es una propiedad del circuito que no se reconfigura con el contexto (al menos a esta resolución: cambios
+# en la fuerza mediana mayores a ~0,05 los habríamos detectado). Junto con IV.1: el contexto cambia la tasa, pero ni la
+# co-variación lenta (r_sc) ni la sincronía fina.
+
+# %% [markdown]
+# ### IV.4 · ¿La coordinación ayuda o perjudica a decodificar el olor?
+#
+# Que el r_sc **medio** no cambie con el contexto no dice si las correlaciones **importan para el código**. Lo que importa
+# no es su tamaño sino su **estructura** respecto de las respuestas: si las neuronas que prefieren el mismo olor fluctúan
+# juntas, el ruido compartido se confunde con la señal y las correlaciones **limitan** la información (Averbeck,
+# Latham & Pouget 2006); con otra estructura pueden **ayudar**.
+#
+# **Método.**
+# - **Features**: conteos de las 44 neuronas en 0–0,5 s tras la primera inhalación (la época de olor de IV.1). Como
+#   variante, 0–1 s (incluye la salida del contexto en CU).
+# - **Etiqueta**: olor recompensado (OR: tipos 1, 2) vs no recompensado (OU: 3, 4), **por separado en cada contexto**:
+#   CR (63 OR vs 24 OU) y CU (30 vs 33).
+# - **Decodificador**: regresión logística regularizada (C = 1) con estandarización, entrenada sólo con los datos de
+#   entrenamiento de cada fold.
+# - **Validación** (chequeo TIME de Uribarri): ensayos vecinos se parecen (deriva lenta de tasas, motivación), así que
+#   partir al azar filtra información. Usamos `GroupKFold` (5 folds) con **bloques de 20 ensayos contiguos** como grupos:
+#   nunca se entrena y testea con ensayos del mismo bloque.
+# - **Métrica**: *balanced accuracy* (en CR hay 63 vs 24: un decodificador que siempre dice "OR" tendría 72 % de accuracy
+#   pero 50 % balanceada). **Azar**: el mismo procedimiento con las etiquetas permutadas (200 veces).
+# - **Mezcla que destruye las correlaciones** (*shuffle*): dentro de cada clase, se permutan los ensayos **de cada neurona
+#   por separado**. Cada neurona conserva su distribución de respuestas a cada olor, pero se pierde la co-variación
+#   entre neuronas. Se mezcla **dentro de cada fold** (entrenamiento y test por separado) para no mezclar ensayos de
+#   bloques distintos. 100 repeticiones.
+# - **Lectura**: real < mezclado → las correlaciones **perjudican**; real > mezclado → **ayudan**.
+# - **Comparación entre contextos en igualdad**: CR y CU tienen distinto número de ensayos y desbalance. Para comparar el
+#   efecto de las correlaciones (real − mezclado) entre contextos, submuestreamos ambos a 30 OR + 24 OU (100 veces).
+
+# %%
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import balanced_accuracy_score
+from sklearn.model_selection import GroupKFold
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import StandardScaler
+
+BLOQUE = 20
+CV4 = GroupKFold(n_splits=5)
+
+
+def conteos_ventana(tr, a, b):
+    ev = tr.t_inhal.values
+    return np.array([np.searchsorted(spikes[n], ev + b) - np.searchsorted(spikes[n], ev + a) for n in ESTABLES], float).T
+
+
+def mezclar(X, y):
+    """Permuta los ensayos de cada neurona por separado dentro de cada clase: destruye la co-variación entre neuronas."""
+    Xs = X.copy()
+    for c in np.unique(y):
+        f = np.where(y == c)[0]
+        for j in range(X.shape[1]):
+            Xs[f, j] = X[RNG.permutation(f), j]
+    return Xs
+
+
+def decodificar(X, y, grupos, mezcla=False):
+    """Balanced accuracy por fold (lista)."""
+    acc = []
+    for itr, ite in CV4.split(X, y, grupos):
+        Xtr, Xte = X[itr], X[ite]
+        if mezcla:
+            Xtr, Xte = mezclar(Xtr, y[itr]), mezclar(Xte, y[ite])
+        mod = make_pipeline(StandardScaler(), LogisticRegression(C=1.0, max_iter=2000))
+        mod.fit(Xtr, y[itr])
+        acc.append(balanced_accuracy_score(y[ite], mod.predict(Xte)))
+    return np.array(acc)
+
+
+VENT4 = {"0–0,5 s": (0.0, 0.5), "0–1 s": (0.0, 1.0)}
+CTX4 = {"CR": [1, 3], "CU": [2, 4]}
+RES44 = {}
+for vn, (a, b) in VENT4.items():
+    for cn, tipos in CTX4.items():
+        tr = VALIDOS[VALIDOS.tipo.isin(tipos)]
+        X = conteos_ventana(tr, a, b)
+        y = tr.tipo.isin([1, 2]).values.astype(int)            # 1 = olor recompensado
+        g = tr.index.values // BLOQUE
+        real = decodificar(X, y, g)
+        mezc = np.array([decodificar(X, y, g, mezcla=True).mean() for _ in range(100)])
+        azar = np.array([decodificar(X, RNG.permutation(y), g).mean() for _ in range(200)])
+        RES44[(vn, cn)] = dict(n_or=int(y.sum()), n_ou=int((1 - y).sum()), real=float(real.mean()),
+                               real_folds=real, mezcla=mezc, azar=azar,
+                               p_vs_azar=float((np.sum(azar >= real.mean()) + 1) / (len(azar) + 1)),
+                               p_vs_mezcla=float(2 * min(np.mean(mezc >= real.mean()), np.mean(mezc <= real.mean())) + 1 / 101))
+        o = RES44[(vn, cn)]
+        print(f"{vn:8s} {cn}: OR/OU = {o['n_or']}/{o['n_ou']}  real = {o['real']:.3f} (folds {np.round(real, 2)})  "
+              f"mezclado = {mezc.mean():.3f} ± {mezc.std():.3f}  azar = {azar.mean():.3f} (95 % {np.quantile(azar, 0.95):.3f})  "
+              f"p vs azar = {o['p_vs_azar']:.3f}  p vs mezclado = {min(o['p_vs_mezcla'], 1):.3f}")
+
+# comparación entre contextos con los mismos tamaños (30 OR + 24 OU), ventana principal
+N_OR, N_OU = 30, 24
+DIF_CTX = {cn: [] for cn in CTX4}
+a, b = VENT4["0–0,5 s"]
+for cn, tipos in CTX4.items():
+    tr = VALIDOS[VALIDOS.tipo.isin(tipos)]
+    X = conteos_ventana(tr, a, b)
+    y = tr.tipo.isin([1, 2]).values.astype(int)
+    g = tr.index.values // BLOQUE
+    for _ in range(100):
+        s = np.sort(np.r_[RNG.choice(np.where(y == 1)[0], N_OR, replace=False),
+                          RNG.choice(np.where(y == 0)[0], N_OU, replace=False)])
+        r_ = decodificar(X[s], y[s], g[s]).mean()
+        m_ = np.mean([decodificar(X[s], y[s], g[s], mezcla=True).mean() for _ in range(5)])
+        DIF_CTX[cn].append((r_, m_))
+    DIF_CTX[cn] = np.array(DIF_CTX[cn])
+d_cr, d_cu = DIF_CTX["CR"][:, 0] - DIF_CTX["CR"][:, 1], DIF_CTX["CU"][:, 0] - DIF_CTX["CU"][:, 1]
+for cn, d in [("CR", d_cr), ("CU", d_cu)]:
+    print(f"Igualados ({N_OR} OR + {N_OU} OU) {cn}: real = {DIF_CTX[cn][:, 0].mean():.3f}  "
+          f"mezclado = {DIF_CTX[cn][:, 1].mean():.3f}  real − mezclado = {d.mean():+.3f} "
+          f"(IC 95 % {np.quantile(d, 0.025):+.3f} a {np.quantile(d, 0.975):+.3f})")
+dd = d_cr[:, None] - d_cu[None, :]
+print(f"Diferencia CR − CU del efecto de las correlaciones: {dd.mean():+.3f} "
+      f"(IC 95 % {np.quantile(dd, 0.025):+.3f} a {np.quantile(dd, 0.975):+.3f})")
+
+# %%
+fig, axs = plt.subplots(1, 3, figsize=(10, 3.1), gridspec_kw=dict(wspace=0.38, width_ratios=[1, 1, 0.9]))
+for ax, vn in zip(axs[:2], VENT4):
+    for k, cn in enumerate(CTX4):
+        o = RES44[(vn, cn)]
+        x0 = k * 1.2
+        vp = ax.violinplot([o["azar"], o["mezcla"]], positions=[x0 - 0.3, x0 + 0.3], widths=0.35, showextrema=False)
+        for body, col in zip(vp["bodies"], ["#DDDDDD", "#A9C4F5"]):
+            body.set_facecolor(col); body.set_alpha(1); body.set_edgecolor("none")
+        ax.errorbar(x0, o["real"], yerr=o["real_folds"].std(ddof=1) / np.sqrt(len(o["real_folds"])), fmt="o",
+                    color=VERDE_CR if cn == "CR" else GRIS_CU, ms=8, capsize=3, zorder=3)
+        ax.text(x0, 0.97, f"{cn}\n{o['n_or']} OR / {o['n_ou']} OU", ha="center", va="top", fontsize=7.5)
+    ax.axhline(0.5, color=TINTA, lw=0.5, ls=":")
+    ax.set_xticks([-0.3, 0, 0.3, 0.9, 1.2, 1.5])
+    ax.set_xticklabels(["azar", "real", "mezcl.", "azar", "real", "mezcl."], fontsize=7.5)
+    ax.set_ylim(0.3, 1.0)
+    ax.set_title(f"Olor OR vs OU · {vn}", fontsize=9)
+axs[0].set_ylabel("Balanced accuracy (CV por bloques)")
+ax = axs[2]
+vp = ax.violinplot([d_cr, d_cu], positions=[0, 1], widths=0.6, showextrema=False)
+for body, col in zip(vp["bodies"], [VERDE_CR, GRIS_CU]):
+    body.set_facecolor(col); body.set_alpha(0.6); body.set_edgecolor("none")
+ax.scatter([0, 1], [d_cr.mean(), d_cu.mean()], color=TINTA, s=18, zorder=3)
+ax.axhline(0, color=TINTA, lw=0.6)
+ax.set_xticks([0, 1]); ax.set_xticklabels(["CR", "CU"])
+ax.set_ylabel("real − mezclado")
+ax.set_title(f"Efecto de las correlaciones\n(igualados: {N_OR} OR + {N_OU} OU)", fontsize=9)
+guardar(fig, "parte4/decodificacion.png")
+plt.show()
+
+RES44_json = {f"{vn} | {cn}": dict(n_or=o["n_or"], n_ou=o["n_ou"], real=o["real"],
+                                   real_sd_folds=float(o["real_folds"].std(ddof=1)),
+                                   mezcla=float(o["mezcla"].mean()), mezcla_sd=float(o["mezcla"].std()),
+                                   azar=float(o["azar"].mean()), azar_q95=float(np.quantile(o["azar"], 0.95)),
+                                   p_vs_azar=o["p_vs_azar"], p_vs_mezcla=float(min(o["p_vs_mezcla"], 1)))
+              for (vn, cn), o in RES44.items()}
+RES44_json["igualados"] = dict(n_or=N_OR, n_ou=N_OU,
+                               **{f"{cn}_{k}": float(DIF_CTX[cn][:, i].mean()) for cn in CTX4 for i, k in enumerate(["real", "mezcla"])},
+                               dif_CR=float(d_cr.mean()), dif_CU=float(d_cu.mean()),
+                               dif_CR_menos_CU=float(dd.mean()),
+                               dif_CR_menos_CU_ic95=[float(x) for x in np.quantile(dd, [0.025, 0.975])])
+
+# %% [markdown]
+# ### Resumen de la Parte IV (IV.1–IV.4) y lo que sigue
+#
+# Los números se guardan en `figuras/resumen_parte4.json` (los usa la presentación). Lo que falta (IV.4–IV.6) está
 # detallado en `HANDOFF_parte_IV.md`, con las variables de este notebook que conviene reutilizar.
 
 # %%
@@ -1286,5 +1622,7 @@ res4["p_chi_interaccion"] = float(p_chi)
 res4["composicion_por_cuartil"] = {q: {k: int(v) for k, v in fila.items()} for q, fila in COMP_Q.iterrows()}
 res4["delta_vs_semejanza"] = {f"{k[0]} | {k[1]}": dict(rho=float(v["rho"]), p=float(v["p"])) for k, v in DELTA_Q.items()}
 res4["n_pares"] = int(len(pares_ok))
+res4["ccg_contexto"] = RES43
+res4["decodificacion"] = RES44_json
 (FIG / "resumen_parte4.json").write_text(pd.Series(res4, dtype=object).to_json(force_ascii=False, indent=1), encoding="utf-8")
 pd.Series(res4, dtype=object)
