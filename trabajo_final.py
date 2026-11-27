@@ -13,7 +13,7 @@
 # | I | Perfiles de respuesta: raster + PSTH por neurona, 4 alineaciones; clasificación de respuestas |
 # | II | Actividad poblacional por tipo de ensayo |
 # | III | Correlación neuronal: autocorrelogramas y cross-correlogramas |
-# | IV | Análisis libre: ¿el contexto recompensado cambia la coordinación? (IV.1–IV.4 hechos; IV.5–IV.6 en el handoff) |
+# | IV | Análisis libre: ¿el contexto recompensado cambia la coordinación? (IV.1–IV.6, conclusiones al final) |
 #
 # **Convención de colores** (la de la consigna): OR·CR rojo, OR·CU naranja, OU·CR negro, OU·CU gris.
 # Los ensayos sin olor (sólo contexto) van en azul (CR) y celeste (CU).
@@ -1024,7 +1024,7 @@ pd.Series(resumen, dtype=object)
 # La ventana de olor termina a los 0,5 s porque en el contexto no recompensado el ratón sale ~0,5 s después de inhalar:
 # así las dos condiciones se comparan dentro del contexto.
 #
-# **Plan completo** (esta entrega cubre IV.1 a IV.4; el resto está en `HANDOFF_parte_IV.md`):
+# **Plan**:
 # IV.1 r_sc por contexto y época con controles · IV.2 ensambles: semejanza de respuesta vs acoplamiento ·
 # IV.3 CCG de ms por contexto · IV.4 ¿la coordinación ayuda o perjudica a decodificar el olor? ·
 # IV.5 ensambles por clustering · IV.6 control de la velocidad y cierre.
@@ -1842,10 +1842,100 @@ RES45 = dict(k=int(K5), silhouette={int(k): float(v) for k, v in SIL5.items()},
 # se concentra en ellos de forma detectable.
 
 # %% [markdown]
-# ### Resumen de la Parte IV (IV.1–IV.4) y lo que sigue
+# ### IV.6 · Control de la velocidad
 #
-# Los números se guardan en `figuras/resumen_parte4.json` (los usa la presentación). Lo que falta (IV.5–IV.6) está
-# detallado en `HANDOFF_parte_IV.md`, con las variables de este notebook que conviene reutilizar.
+# El ratón corre a velocidades muy distintas según el ensayo: el tiempo que pasa en el contexto (`dur_contexto`, nuestro
+# único proxy de velocidad) va de ~0,9 s en CU a ~2 s en OR·CR y ~10 s en OU·CR. La locomoción modula la actividad cortical
+# en muchas áreas; si modula a varias neuronas a la vez, **crea correlación de ruido** (ensayos más lentos → todas cambian
+# juntas). Eso podría inflar r_sc distinto en cada contexto y enmascarar (o fabricar) un efecto en IV.1.
+#
+# **Control** (época de olor, 0–0,5 s): para cada neurona y **dentro de cada tipo de ensayo**, regresión lineal de los
+# conteos sobre log(tiempo en el contexto); nos quedamos con los residuos (más la media del tipo, para conservar la tasa)
+# y repetimos IV.1 con el mismo test de permutación.
+#
+# **Límite**: en la aproximación (antes de entrar) no hay proxy de velocidad; el tiempo en el contexto se mide después
+# y no tiene por qué reflejar la velocidad previa. Queda como limitación.
+
+# %%
+def residualizar(C, tr):
+    """Quita, neurona por neurona y dentro de cada tipo, la parte de los conteos explicada por log(dur_contexto)."""
+    X = C.copy()
+    ld = np.log(tr.dur_contexto.values)
+    pv = []
+    for k in np.unique(tr.tipo):
+        m = tr.tipo.values == k
+        A = np.c_[np.ones(m.sum()), ld[m] - ld[m].mean()]
+        beta = np.linalg.lstsq(A, X[:, m].T, rcond=None)[0]
+        X[:, m] = X[:, m] - (A[:, 1:] @ beta[1:]).T
+        pv.append([stats.spearmanr(ld[m], C[i, m]).pvalue if C[i, m].std() > 0 else 1.0 for i in range(len(C))])
+    return X, np.array(pv)
+
+
+RES46 = {}
+for etq, tipos in [("OR: CR vs CU", [1, 2]), ("OU: CR vs CU", [3, 4])]:
+    tr = VALIDOS[VALIDOS.tipo.isin(tipos)]
+    C = conteos_epoca("Olor", tr)
+    Cr, pv = residualizar(C, tr)
+    clase = tr.tipo.map(ODOR_CLASE).values
+    ctx = tr.tipo.map(CTX).values
+    obs = efecto_contexto(Cr, clase, ctx)
+    nulo = np.empty(N_PERM)
+    for i in range(N_PERM):
+        nulo[i] = efecto_contexto(Cr, clase, permutar_ctx(ctx, clase))["delta"]
+    o1 = RES4[("Olor", etq)]
+    RES46[etq] = dict(delta_crudo=float(o1["delta"]), p_crudo=float(o1["p"]),
+                      delta_vel=float(obs["delta"]), p_vel=float((np.sum(np.abs(nulo) >= abs(obs["delta"])) + 1) / (N_PERM + 1)),
+                      rsc_cr_crudo=float(np.mean(o1["r_cr"][o1["ok"]])), rsc_cu_crudo=float(np.mean(o1["r_cu"][o1["ok"]])),
+                      rsc_cr_vel=float(np.mean(obs["r_cr"][obs["ok"]])), rsc_cu_vel=float(np.mean(obs["r_cu"][obs["ok"]])),
+                      neuronas_moduladas=int((pv < 0.01).any(0).sum()))
+    r_ = RES46[etq]
+    print(f"Olor {etq}: neuronas moduladas por velocidad (p < 0,01 en algún tipo) = {r_['neuronas_moduladas']} de {len(C)}")
+    print(f"   r_sc CR {r_['rsc_cr_crudo']:.3f} → {r_['rsc_cr_vel']:.3f}   CU {r_['rsc_cu_crudo']:.3f} → {r_['rsc_cu_vel']:.3f}")
+    print(f"   Δ crudo = {r_['delta_crudo']:+.3f} (p = {r_['p_crudo']:.3f})   Δ sin velocidad = {r_['delta_vel']:+.3f} (p = {r_['p_vel']:.3f})")
+
+# %%
+fig, axs = plt.subplots(1, 2, figsize=(8, 2.9), gridspec_kw=dict(wspace=0.4, width_ratios=[1.1, 1]))
+ax = axs[0]
+for i, k in enumerate([1, 2, 3, 4, 5, 6]):
+    d = VALIDOS.loc[VALIDOS.tipo == k, "dur_contexto"].values
+    ax.scatter(i + RNG.uniform(-0.18, 0.18, len(d)), d, s=6, color=COLORES[k], alpha=0.7, lw=0)
+    ax.plot([i - 0.25, i + 0.25], [np.median(d)] * 2, color=TINTA, lw=1.5)
+ax.set_yscale("log")
+ax.set_xticks(range(6)); ax.set_xticklabels([ETIQ[k].replace(" sin olor", "\nsin olor") for k in range(1, 7)], fontsize=7)
+ax.set_ylabel("tiempo en el contexto (s)")
+ax.set_title("La velocidad depende del tipo de ensayo", fontsize=9)
+ax = axs[1]
+x = np.arange(2)
+for dx, clave, col, lab in [(-0.18, "crudo", "#BBBBBB", "IV.1 (crudo)"), (0.18, "vel", VERDE_CR, "sin velocidad")]:
+    v = [RES46[e][f"delta_{clave}"] for e in RES46]
+    ax.bar(x + dx, v, width=0.36, color=col, label=lab)
+    for xi, e in zip(x, RES46):
+        ax.text(xi + dx, max(RES46[e][f"delta_{clave}"], 0) + 0.0008, p_txt(RES46[e][f"p_{clave}"]), ha="center",
+                fontsize=6.5)
+ax.axhline(0, color=TINTA, lw=0.6)
+ax.set_xticks(x); ax.set_xticklabels(["Olor OR\nCR vs CU", "Olor OU\nCR vs CU"], fontsize=8)
+ax.set_ylabel("Δ r_sc (CR − CU)")
+ax.set_ylim(top=ax.get_ylim()[1] * 1.3)
+ax.legend(fontsize=7, loc="upper right")
+ax.set_title("¿Cambia IV.1 al quitar la velocidad?", fontsize=9)
+guardar(fig, "parte4/rsc_velocidad.png")
+plt.show()
+
+# %% [markdown]
+# **Cómo leerlo.**
+# - **Izquierda**: el confusor existe. Con olor no recompensado en el contexto recompensado (OU·CR) el ratón se queda ~10 s;
+#   en CU sale en ~1 s con cualquier olor. Velocidad y condición están muy mezcladas **entre** tipos de ensayo.
+# - **Pero dentro de cada tipo** la velocidad casi no explica la actividad en la época de olor: sólo 3–4 de 44 neuronas
+#   muestran relación con el tiempo en el contexto (p < 0,01; por azar esperaríamos ~1).
+# - **Derecha**: quitando esa parte, el Δ r_sc entre contextos queda prácticamente igual (OR: +0,011 → +0,011;
+#   OU: +0,006 → +0,006) y sigue sin ser significativo. **La conclusión de IV.1 no depende de la velocidad.**
+# - Lo que este control **no** puede hacer: separar velocidad de condición *entre* tipos (en CR, OU siempre es lento). Para eso
+#   haría falta la velocidad continua de la rueda, que no está en los datos.
+
+# %% [markdown]
+# ### Resumen de la Parte IV
+#
+# Los números se guardan en `figuras/resumen_parte4.json` (los usa la presentación).
 
 # %%
 res4 = {f"{e} | {c}": dict(n_cr=o["n_cr"], n_cu=o["n_cu"], rsc_cr=float(np.mean(o["r_cr"][o["ok"]])),
@@ -1862,5 +1952,37 @@ res4["n_pares"] = int(len(pares_ok))
 res4["ccg_contexto"] = RES43
 res4["decodificacion"] = RES44_json
 res4["ensambles_clusters"] = RES45
+res4["velocidad"] = RES46
 (FIG / "resumen_parte4.json").write_text(pd.Series(res4, dtype=object).to_json(force_ascii=False, indent=1), encoding="utf-8")
 pd.Series(res4, dtype=object)
+
+# %% [markdown]
+# ## Conclusiones de la Parte IV
+#
+# **Pregunta**: ¿el contexto recompensado cambia cómo se coordinan las neuronas de la corteza piriforme, y no sólo cuánto
+# disparan?
+#
+# **Respuesta corta: no de forma detectable. El contexto cambia cuánto disparan las neuronas, pero no cómo se coordinan.**
+#
+# | | Resultado | Lectura |
+# |---|---|---|
+# | **IV.1** r_sc por contexto | Sin diferencia en ninguna época (p ≥ 0,46); la tasa sí sube en la aproximación a CR | El contexto modula la tasa, no la co-variación lenta. Límite: no detectamos cambios < ~0,015–0,026 |
+# | **IV.2** like-to-like | Las neuronas que responden parecido co-varían más (Mantel ρ = 0,13, p = 0,001) | Hay estructura de ensambles en la coordinación |
+# | **IV.2** ¿dónde actúa el contexto? | Efectos chicos y de signo opuesto según la época; el de la aproximación se parece al del corredor (control) | Sólo el Δ en pares "distintos" durante el olor se separa del control; débil |
+# | **IV.3** sincronía de ms | Estable entre contextos (Δ = −0,002, p = 0,95) | Las conexiones funcionales son una propiedad fija del circuito |
+# | **IV.4** decodificación | El olor se decodifica en ambos contextos (~0,78–0,79); quitar las correlaciones no cambia nada | La coordinación no ayuda ni perjudica a leer el olor |
+# | **IV.5** ensambles | 3 ensambles blandos: "de olor" (6), "de contexto" (12), mayormente inhibido (26). Las interacciones de ms no siguen sus límites | El contexto se codifica en un subgrupo de neuronas (tasa), no en la coordinación |
+# | **IV.6** velocidad | Quitar la velocidad no cambia IV.1 | El nulo no es un artefacto de la locomoción |
+#
+# **Idea central.** La corteza piriforme tiene una red de coordinación (sincronía de ms, ensambles like-to-like) que se
+# mantiene igual en los dos contextos. El contexto recompensado se expresa en **cuánto** disparan las neuronas, sobre todo
+# en un ensamble que se activa antes del olor, y no en **cómo** se coordinan. La información sobre el olor está en el patrón
+# de tasas de la población y se lee igual tratando a las neuronas como independientes.
+#
+# **Limitaciones.**
+# - Una sola sesión de un animal (44 neuronas estables): los resultados nulos tienen potencia acotada (los efectos
+#   detectables están indicados en cada paso).
+# - Pocos ensayos en algunas condiciones (24 OU·CR, 30 OR·CU).
+# - No tenemos velocidad continua ni lengüeteos: el tiempo en el contexto es un proxy grueso, y la velocidad está mezclada
+#   con la condición entre tipos de ensayo.
+# - Las "conexiones" del CCG son funcionales, no anatómicas: una entrada común con retardos distintos produce lo mismo.

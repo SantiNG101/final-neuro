@@ -295,5 +295,29 @@
     "p":0.3536463536
    }
   }
+ },
+ "velocidad":{
+  "OR: CR vs CU":{
+   "delta_crudo":0.0112379727,
+   "p_crudo":0.4595404595,
+   "delta_vel":0.0105238177,
+   "p_vel":0.4635364635,
+   "rsc_cr_crudo":0.0194101861,
+   "rsc_cu_crudo":0.0081722134,
+   "rsc_cr_vel":0.0203456535,
+   "rsc_cu_vel":0.0098218358,
+   "neuronas_moduladas":3
+  },
+  "OU: CR vs CU":{
+   "delta_crudo":0.0057859245,
+   "p_crudo":0.4875124875,
+   "delta_vel":0.0061461495,
+   "p_vel":0.4895104895,
+   "rsc_cr_crudo":0.004501772,
+   "rsc_cu_crudo":-0.0012841526,
+   "rsc_cr_vel":0.0056561996,
+   "rsc_cu_vel":-0.00048995,
+   "neuronas_moduladas":4
+  }
  }
 }

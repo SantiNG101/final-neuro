@@ -32,6 +32,7 @@ Comparaciones: CR (tipos 1, 3, 5) vs CU (2, 4, 6) en corredor y aproximación; O
 | **IV.3** interacciones de ms por contexto (140 pares, CCG por ensayo sumado, 1000 permutaciones) | **Estables**: fuerza mediana 0,29 (CR) vs 0,27 (CU), Δ = −0,002, p = 0,95; igual con pares bien medidos, CR submuestreado y por tipo de interacción. Δ detectable ≈ 0,05 | `figuras/parte4/ccg_por_contexto.png` |
 | **IV.4** decodificar OR vs OU (0–0,5 s, logística, GroupKFold por bloques de 20 ensayos) | Olor decodificable en ambos contextos (balanced acc. CR 0,79, CU 0,78; azar 0,50, p < 0,01). **Mezclar (sin correlaciones) no cambia nada** (0,80 / 0,77; p = 0,85 / 0,93). Igualando ensayos, efecto CR − CU = +0,02 (IC −0,12 a +0,16). Confusores: en CR, OU frena al ratón (~10 s vs 2 s); 0–1 s en CU (0,99) incluye la salida/ventana de respuesta | `figuras/parte4/decodificacion.png` |
 | **IV.5** ensambles por clustering (average linkage sobre 1 − SENAL) | k = 3, silhouette 0,19 vs nulo 0,14 (p = 0,015): ensambles **blandos**. E3 (6) "de olor" (excitado, antes con OR); E2 (12) "de contexto" (CR > CU desde antes del olor); E1 (26) débil, con 8 de las 9 inhibidas. "Inhibición entre ensambles" **no se sostiene** (inhibitorias 6,0 % dentro vs 2,8 % entre, p = 0,16). Δ r_sc olor entre (+0,019) > dentro (+0,001), p = 0,30 | `figuras/parte4/ensambles_clusters.png`, `ensambles_psth.png` |
+| **IV.6** velocidad (residuos de log(tiempo en contexto) dentro de cada tipo, época de olor) | Sólo 3–4 de 44 neuronas moduladas; Δ r_sc igual (OR +0,011 → +0,011, p = 0,46; OU +0,006 → +0,006, p = 0,49). IV.1 no depende de la velocidad | `figuras/parte4/rsc_velocidad.png` |
 
 Todos los números están en `figuras/resumen_parte4.json`, que la presentación lee automáticamente.
 
@@ -161,7 +162,7 @@ texto con alto negativo (el helper `tarjeta` ya lo evita) y renombrar las partes
 - [x] IV.3 CCG por contexto + figura + números en `res4` (nulo: Δ fuerza mediana −0,002, p = 0,95; `res4["ccg_contexto"]`)
 - [x] IV.4 decodificación real vs mezclada + figura + números en `res4` (`res4["decodificacion"]`; mezcla hecha dentro de cada fold)
 - [x] IV.5 ensambles por clustering + figura (`res4["ensambles_clusters"]`; `ensambles_clusters.png`, `ensambles_psth.png`)
-- [ ] IV.6 control de velocidad + conclusiones en el notebook
-- [ ] Notebook regenerado y ejecutado sin errores
+- [x] IV.6 control de velocidad + conclusiones en el notebook (`res4["velocidad"]`; `rsc_velocidad.png`)
+- [x] Notebook regenerado y ejecutado sin errores
 - [ ] Diapositivas 14 → resultados, 15 conclusiones, 2 idea central, portada con nombres
 - [ ] Presentación abierta en PowerPoint y ensayada con el guión (≤ 30 min)
